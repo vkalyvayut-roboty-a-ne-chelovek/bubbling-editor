@@ -3,7 +3,7 @@ import unittest
 from bubbling_editor.bus import Bus
 
 
-class BusCase(unittest.TestCase):
+class TestBus(unittest.TestCase):
     def test_register(self):
         bus = Bus()
 

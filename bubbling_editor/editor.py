@@ -1,3 +1,5 @@
+import time
+
 from bubbling_editor.bus import Bus
 from bubbling_editor.statechart import Statechart
 from bubbling_editor.gui import Gui
@@ -10,3 +12,7 @@ def run():
 
     statechart.run()
     gui.run()
+
+
+if __name__ == '__main__':
+    run()

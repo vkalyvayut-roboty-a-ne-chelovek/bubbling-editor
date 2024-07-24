@@ -67,6 +67,5 @@ class TestStatechart(unittest.TestCase):
         self._assert_spy_check(expected_spy, actual_spy)
 
 
-
 if __name__ == '__main__':
     unittest.main()

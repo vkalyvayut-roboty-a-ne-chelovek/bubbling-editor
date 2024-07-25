@@ -32,6 +32,9 @@ class TestabeGui:
     def load_image(self, path_to_image: pathlib.Path, bubbles: list) -> None:
         pass
 
+    def add_bubble(self, bubble: AddBubblePayload) -> None:
+        pass
+
 class Gui(TestabeGui):
     def __init__(self, bus: Bus):
         self.bus = bus

@@ -24,6 +24,9 @@ class Statechart(ActiveObject):
     def run(self):
         self.start_at(init_state)
 
+    def on_init_state_init(self):
+        self.bus.gui.disable_save_btn()
+
     def on_init_state_new_image(self, path_to_image: pathlib.Path):
         self.path_to_image = path_to_image
         self.bus.gui.load_image(path_to_image, bubbles=[])
@@ -34,10 +37,11 @@ class Statechart(ActiveObject):
     def on_image_loaded_save_image(self, path_to_image: pathlib.Path):
         pass
 
+    def on_image_loaded_init(self):
+        self.bus.gui.enable_save_btn()
+
     def on_image_loaded_add_bubble(self, bubble_data: AddBubblePayload):
         self.bubbles.append(bubble_data)
-
-
 
     def launch_new_image_event(self, path_to_image: pathlib.Path) -> None:
         self.post_fifo(Event(signal=signals.NEW_IMAGE, payload=path_to_image))
@@ -54,6 +58,9 @@ def init_state(s: Statechart, e: Event) -> return_status:
     status = return_status.UNHANDLED
 
     if e.signal == signals.ENTRY_SIGNAL:
+        status = return_status.HANDLED
+    elif e.signal == signals.INIT_SIGNAL:
+        s.on_init_state_init()
         status = return_status.HANDLED
     elif e.signal == signals.NEW_IMAGE:
         s.on_init_state_new_image(e.payload)
@@ -74,9 +81,12 @@ def image_loaded(s: Statechart, e: Event) -> return_status:
 
     if e.signal == signals.ENTRY_SIGNAL:
         status = return_status.HANDLED
-    elif e.signal == signals.ADD_BUBBLE:
+    if e.signal == signals.INIT_SIGNAL:
+        s.on_image_loaded_init()
         status = return_status.HANDLED
+    elif e.signal == signals.ADD_BUBBLE:
         s.on_image_loaded_add_bubble(e.payload)
+        status = return_status.HANDLED
     elif e.signal == signals.SAVE_IMAGE:
         s.on_image_loaded_save_image(e.payload)
         status = return_status.HANDLED

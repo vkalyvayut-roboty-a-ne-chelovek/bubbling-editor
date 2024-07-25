@@ -6,6 +6,7 @@ from PIL import Image, ImageTk
 from bubbling_editor.bus import Bus
 from bubbling_editor import helpers
 
+
 class TestabeGui:
     def __init__(self, bus: Bus):
         self.bus = bus
@@ -14,10 +15,16 @@ class TestabeGui:
     def run(self):
         pass
 
+    def enable_save_btn(self):
+        pass
+
+    def disable_save_btn(self):
+        pass
+
     def load_image(self, path_to_image: pathlib.Path, bubbles: list) -> None:
         pass
 
-class Gui:
+class Gui(TestabeGui):
     def __init__(self, bus: Bus):
         self.bus = bus
         self.bus.register('gui', self)
@@ -62,8 +69,7 @@ class Gui:
 
         self.save_image_btn = tkinter.Button(
             self.instruments_panel, text='SAVE',
-            command=self._show_save_image_popup,
-            state='normal')
+            command=self._show_save_image_popup)
         self.save_image_btn.grid(row=0, column=2, sticky='n')
         self.root.bind('<Control-s>', lambda _: self._show_save_image_popup())
 
@@ -71,7 +77,16 @@ class Gui:
 
     def run(self) -> None:
         self.make_gui()
+        self.disable_save_btn()
         self.root.mainloop()
+
+    def enable_save_btn(self):
+        if hasattr(self, 'save_image_btn'):
+            self.save_image_btn['state'] = 'normal'
+
+    def disable_save_btn(self):
+        if hasattr(self, 'save_image_btn'):
+            self.save_image_btn['state'] = 'disabled'
 
     def add_bubble(self, bubble) -> None:
         self.bubbles.append(bubble)

@@ -1,4 +1,3 @@
-from collections import namedtuple
 import pathlib
 
 from miros import ActiveObject
@@ -9,7 +8,7 @@ from miros import spy_on
 
 from bubbling_editor.bus import Bus
 
-AddBubblePayload = namedtuple('AddBubblePayload', ['pos', 'radius'])
+from bubbling_editor.misc import AddBubblePayload
 
 
 class Statechart(ActiveObject):
@@ -37,11 +36,17 @@ class Statechart(ActiveObject):
     def on_image_loaded_save_image(self, path_to_image: pathlib.Path):
         pass
 
-    def on_image_loaded_init(self):
+    def on_image_loaded_entry(self):
         self.bus.gui.enable_save_btn()
+        self.bus.gui.enable_click_listener()
+
+    def on_image_loaded_exit(self):
+        self.bus.gui.disable_save_btn()
+        self.bus.gui.disable_click_listener()
 
     def on_image_loaded_add_bubble(self, bubble_data: AddBubblePayload):
         self.bubbles.append(bubble_data)
+        self.bus.gui.add_bubble(bubble_data)
 
     def launch_new_image_event(self, path_to_image: pathlib.Path) -> None:
         self.post_fifo(Event(signal=signals.NEW_IMAGE, payload=path_to_image))
@@ -51,6 +56,9 @@ class Statechart(ActiveObject):
 
     def launch_save_image_event(self, path_to_image: pathlib.Path) -> None:
         self.post_fifo(Event(signal=signals.SAVE_IMAGE, payload=path_to_image))
+
+    def launch_add_bubble_event(self, bubble: AddBubblePayload):
+        self.post_fifo(Event(signal=signals.ADD_BUBBLE, payload=bubble))
 
 
 @spy_on
@@ -80,9 +88,10 @@ def image_loaded(s: Statechart, e: Event) -> return_status:
     status = return_status.UNHANDLED
 
     if e.signal == signals.ENTRY_SIGNAL:
+        s.on_image_loaded_entry()
         status = return_status.HANDLED
-    if e.signal == signals.INIT_SIGNAL:
-        s.on_image_loaded_init()
+    if e.signal == signals.EXIT_SIGNAL:
+        s.on_image_loaded_exit()
         status = return_status.HANDLED
     elif e.signal == signals.ADD_BUBBLE:
         s.on_image_loaded_add_bubble(e.payload)

@@ -146,9 +146,3 @@ class Gui(TestabeGui):
         path_to_image = filedialog.asksaveasfilename()
         if path_to_image:
             self.bus.statechart.launch_save_image_event(path_to_image)
-
-
-if __name__ == '__main__':
-    b = Bus()
-    g = Gui(bus=b)
-    g.run()

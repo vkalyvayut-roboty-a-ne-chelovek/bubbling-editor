@@ -44,14 +44,19 @@ def from_image_to_canvas_coords(i_w, i_h, c_w, c_h, x, y) -> tuple[int, int]:
 def get_size_to_resize(i_w: int, i_h: int, c_w: int, c_h: int) -> list[int, int]:
     result = [1, 1]
 
-    if i_w / i_h >= 1:
+    if i_w == i_h:
+        # выбираем наименьшую сторону, чтобы в нее влезло изображение
+        size = c_h if c_w / c_h > 1 else c_w
+        # определяем масштаб изображения
+        scale = size / i_w if size > i_w else 1 / (i_w / size)
+        result = [i_w * scale, i_h * scale]
+    elif i_w / i_h > 1:
         scale = c_w / i_w
         result = [i_w * scale, i_h * scale]
     else:
         scale = c_h / i_h
         result = [i_w * scale, i_h * scale]
 
-    result = [int(clamp(0, c_w, result[0])),
-              int(clamp(0, c_h, result[1]))]
+    result = [clamp(0, c_w, result[0]), clamp(0, c_h, result[1])]
 
-    return result
+    return [int(i) for i in result]

@@ -52,17 +52,22 @@ class Gui:
             self.instruments_panel, text='NEW',
             command=self._show_new_image_popup)
         self.new_image_btn.grid(row=0, column=0, sticky='n')
+        self.root.bind('<Control-n>', lambda _: self._show_new_image_popup())
 
         self.open_image_btn = tkinter.Button(
             self.instruments_panel, text='OPEN',
             command=self._show_open_image_popup)
         self.open_image_btn.grid(row=0, column=1, sticky='n')
+        self.root.bind('<Control-o>', lambda _: self._show_open_image_popup())
 
         self.save_image_btn = tkinter.Button(
             self.instruments_panel, text='SAVE',
             command=self._show_save_image_popup,
             state='normal')
         self.save_image_btn.grid(row=0, column=2, sticky='n')
+        self.root.bind('<Control-s>', lambda _: self._show_save_image_popup())
+
+        self.root.bind('<Configure>', lambda _: self._redraw_image_with_bubbles())
 
     def run(self) -> None:
         self.make_gui()
@@ -82,9 +87,10 @@ class Gui:
     def _redraw_image_with_bubbles(self):
         self._clear_image()
 
-        self._resize_raw_image()
-        self._apply_bubbles()
-        self._draw_image_on_canvas()
+        if self.path_to_image:
+            self._resize_raw_image()
+            self._apply_bubbles()
+            self._draw_image_on_canvas()
 
     def _clear_image(self):
         self.tk_image = None

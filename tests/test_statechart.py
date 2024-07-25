@@ -8,6 +8,7 @@ from miros import signals
 
 from bubbling_editor.bus import Bus
 from bubbling_editor.statechart import *
+from bubbling_editor.gui import TestabeGui
 
 
 class TestStatechart(unittest.TestCase):
@@ -30,6 +31,7 @@ class TestStatechart(unittest.TestCase):
     def setUp(self):
         self.bus = Bus()
         self.s = Statechart('bubbling_editor', bus=self.bus)
+        self.g = TestabeGui(self.bus)
         # self.s.live_spy = True
         # self.s.live_trace = True
         self.s.run()
@@ -42,8 +44,20 @@ class TestStatechart(unittest.TestCase):
 
         self._assert_trace_check(expected_trace, actual_trace)
 
+    def test_new_image(self):
+        self.s.launch_new_image_event('./assets/smiley.png')
+        time.sleep(0.1)
+
+        expected_trace = '''
+        [2024-07-23 11:56:21.926948] [bubbling_editor] e->start_at() top->init_state
+        [2024-07-23 11:56:21.928058] [bubbling_editor] e->NEW_IMAGE() init_state->image_loaded
+        '''
+        actual_trace = self.s.trace()
+
+        self._assert_trace_check(expected_trace, actual_trace)
+
     def test_image_loaded(self):
-        self.s.post_fifo(Event(signal=signals.LOAD_IMAGE, payload=pathlib.Path('./assets/smiley.png')))
+        self.s.launch_load_image_event('./assets/smiley.png')
         time.sleep(0.1)
 
         expected_trace = '''
@@ -53,6 +67,18 @@ class TestStatechart(unittest.TestCase):
         actual_trace = self.s.trace()
 
         self._assert_trace_check(expected_trace, actual_trace)
+
+    def test_save_image(self):
+        self.s.launch_new_image_event('./assets/smiley.png')
+        time.sleep(0.1)
+        self.s.launch_save_image_event('./assets/smiley.png')
+        time.sleep(0.1)
+
+        expected_spy = ['START', 'SEARCH_FOR_SUPER_SIGNAL:init_state', 'ENTRY_SIGNAL:init_state', 'INIT_SIGNAL:init_state', '<- Queued:(0) Deferred:(0)', 'NEW_IMAGE:init_state', 'SEARCH_FOR_SUPER_SIGNAL:image_loaded', 'ENTRY_SIGNAL:image_loaded', 'INIT_SIGNAL:image_loaded', '<- Queued:(0) Deferred:(0)', 'SAVE_IMAGE:image_loaded', 'SAVE_IMAGE:image_loaded:HOOK', '<- Queued:(0) Deferred:(0)']
+
+        actual_spy = self.s.spy()
+
+        self._assert_spy_check(expected_spy, actual_spy)
 
     def test_add_bubble(self):
         self.s.post_fifo(Event(signal=signals.LOAD_IMAGE, payload=pathlib.Path('./assets/smiley.png')))

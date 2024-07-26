@@ -54,6 +54,7 @@ class Gui(TestabeGui):
         self.tk_image: ImageTk = None
         self.image_on_canvas = None
         self.bubbles: list = []
+        self.forced_scale_var: tkinter.DoubleVar = None
 
         self._temp_bubble_coords = None
 
@@ -81,6 +82,7 @@ class Gui(TestabeGui):
             command=self._show_new_image_popup)
         self.new_image_btn.grid(row=0, column=0, sticky='w')
         self.root.bind('<Control-n>', lambda _: self._show_new_image_popup())
+        self.root.bind('<Control-n>', lambda _: self.bus.statechart.launch_new_image_event('/home/user28/projects/python/bubbling-editor/tests/assets/___.jpg'))
 
 
         self.open_image_btn = tkinter.Button(
@@ -117,8 +119,19 @@ class Gui(TestabeGui):
         self.undo_btn.grid(row=0, column=4, sticky='w')
         self.root.bind('<Control-z>', lambda _: self.bus.statechart.launch_undo_event())
 
+        self.forced_scale_var = tkinter.DoubleVar(value=0.25)
+        self.forced_scale_frame = tkinter.Frame(self.instruments_panel)
+        self.forced_scale_frame.grid(row=0, column=5, sticky='nesw')
+        self.forced_scale_input = tkinter.Entry(self.forced_scale_frame, textvariable=self.forced_scale_var)
+        self.forced_scale_input.grid(column=0, row=0, sticky='w')
+        self.forced_scale_apply_btn = tkinter.Button(self.forced_scale_frame, text='SCALE', command=self.redraw_image)
+        self.forced_scale_apply_btn.grid(column=1, row=0, sticky='w')
+        self.forced_scale_apply_btn = tkinter.Button(self.forced_scale_frame, text='RESET', command=lambda: self.forced_scale_var.set(0) and self.redraw_image())
+        self.forced_scale_apply_btn.grid(column=2, row=0, sticky='w')
 
-        self.root.bind('<Configure>', lambda _: self._redraw_image_with_bubbles())
+
+
+        self.root.bind('<Configure>', lambda _: self.redraw_image())
 
     def run(self) -> None:
         self.make_gui()
@@ -184,27 +197,24 @@ class Gui(TestabeGui):
 
     def add_bubble(self, bubble: AddBubblePayload) -> None:
         self.bubbles.append(bubble)
-        self._redraw_image_with_bubbles()
+        self.redraw_image()
 
     def load_image(self, path_to_image: pathlib.Path, bubbles: list) -> None:
         self.original_image = Image.open(path_to_image)
         self.path_to_image = path_to_image
         self.bubbles = bubbles
+        self.forced_scale_var.set(0)
 
-        self._redraw_image_with_bubbles()
+        self.redraw_image()
 
-    def _redraw_image_with_bubbles(self):
+    def redraw_image(self):
         self._clear_image()
 
-        start = time.time()
         if self.path_to_image:
             self._load_raw_image()
             self._apply_bubbles()
             self._resize_raw_image()
             self._draw_image_on_canvas()
-
-            finish = time.time()
-            print(finish - start)
 
     def _clear_image(self):
         self.tk_image = None
@@ -215,11 +225,18 @@ class Gui(TestabeGui):
         self.resized_image = Image.open(self.path_to_image).convert(mode='RGBA')
 
     def _resize_raw_image(self):
-        new_sizes = helpers.get_size_to_resize(
-            i_w=self.resized_image.width, i_h=self.resized_image.height,
-            c_w=self.canvas.winfo_width(), c_h=self.canvas.winfo_height()
-        )
-        self.resized_image = self.resized_image.resize(new_sizes, resample=Image.Resampling.NEAREST)
+        c_w, c_h = self.canvas.winfo_width(), self.canvas.winfo_height()
+        i_w, i_h = self.resized_image.width, self.resized_image.height
+        x, y = i_w, i_h
+        if float(self.forced_scale_var.get()) == 0:
+            x, y, scale = helpers.get_size_to_resize(
+                i_w=i_w, i_h=i_h,
+                c_w=c_w, c_h=c_h
+            )
+        else:
+            x, y = int(i_w * float(self.forced_scale_var.get())), int(y * float(self.forced_scale_var.get()))
+
+        self.resized_image = self.resized_image.resize((x, y), resample=Image.Resampling.NEAREST)
 
     def _apply_bubbles(self):
         mask = Image.new(mode='RGBA', size=(self.resized_image.width, self.resized_image.height), color=(0, 0, 0))

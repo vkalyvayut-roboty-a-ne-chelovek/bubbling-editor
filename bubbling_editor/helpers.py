@@ -44,8 +44,9 @@ def from_image_to_canvas_coords(i_w, i_h, c_w, c_h, x, y) -> tuple[int, int]:
     return abs_x, abs_y
 
 
-def get_size_to_resize(i_w: int, i_h: int, c_w: int, c_h: int) -> list[int, int]:
+def get_size_to_resize(i_w: int, i_h: int, c_w: int, c_h: int) -> list[int, int, float]:
     result = [1, 1]
+    scale = 1
 
     if i_w == i_h:
         # выбираем наименьшую сторону, чтобы в нее влезло изображение
@@ -60,7 +61,7 @@ def get_size_to_resize(i_w: int, i_h: int, c_w: int, c_h: int) -> list[int, int]
         scale = c_h / i_h
         result = [i_w * scale, i_h * scale]
 
-    return [int(math.floor(i)) for i in result]
+    return int(result[0]), int(result[1]), scale
 
 
 def from_canvas_to_image_bubble_radius(c_w, c_h, radius) -> float:

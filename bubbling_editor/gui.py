@@ -1,4 +1,5 @@
 import pathlib
+import time
 import tkinter
 from tkinter import filedialog
 from PIL import Image, ImageTk, ImageDraw
@@ -80,7 +81,6 @@ class Gui(TestabeGui):
             command=self._show_new_image_popup)
         self.new_image_btn.grid(row=0, column=0, sticky='w')
         self.root.bind('<Control-n>', lambda _: self._show_new_image_popup())
-        # self.root.bind('<Control-n>', lambda _: self.bus.statechart.launch_new_image_event('/home/user28/projects/python/bubbling-editor/tests/assets/smiley@5.png'))
 
 
         self.open_image_btn = tkinter.Button(
@@ -152,10 +152,10 @@ class Gui(TestabeGui):
         self.root.unbind('<Button-5>')
 
     def _draw_temp_bubble(self, x: int = None, y: int = None) -> None:
-        if (x is None) and len(self._temp_bubble_coords) == 2:
+        if (x is None) and self._temp_bubble_coords and len(self._temp_bubble_coords) == 2:
             x = self._temp_bubble_coords[0]
 
-        if (y is None) and len(self._temp_bubble_coords) == 2:
+        if (y is None) and self._temp_bubble_coords and len(self._temp_bubble_coords) == 2:
             y = self._temp_bubble_coords[1]
 
         for bubble in self.canvas.gettags('#temp_bubble'):
@@ -196,18 +196,25 @@ class Gui(TestabeGui):
     def _redraw_image_with_bubbles(self):
         self._clear_image()
 
+        start = time.time()
         if self.path_to_image:
-            self._resize_raw_image()
+            self._load_raw_image()
             self._apply_bubbles()
+            self._resize_raw_image()
             self._draw_image_on_canvas()
+
+            finish = time.time()
+            print(finish - start)
 
     def _clear_image(self):
         self.tk_image = None
         for canvas_figure in self.canvas.find_withtag('#image'):
             self.canvas.delete(canvas_figure)
 
-    def _resize_raw_image(self):
+    def _load_raw_image(self):
         self.resized_image = Image.open(self.path_to_image).convert(mode='RGBA')
+
+    def _resize_raw_image(self):
         new_sizes = helpers.get_size_to_resize(
             i_w=self.resized_image.width, i_h=self.resized_image.height,
             c_w=self.canvas.winfo_width(), c_h=self.canvas.winfo_height()

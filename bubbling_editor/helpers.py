@@ -1,3 +1,6 @@
+import math
+
+
 def clamp(_min, _max, cur):
     return min(_max, max(_min, cur))
 
@@ -57,7 +60,7 @@ def get_size_to_resize(i_w: int, i_h: int, c_w: int, c_h: int) -> list[int, int]
         scale = c_h / i_h
         result = [i_w * scale, i_h * scale]
 
-    return [int(i) for i in result]
+    return [int(math.floor(i)) for i in result]
 
 
 def from_canvas_to_image_bubble_radius(c_w, c_h, radius) -> float:

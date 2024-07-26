@@ -209,7 +209,8 @@ class Gui(TestabeGui):
         self.resized_image = self.resized_image.resize(new_sizes, resample=Image.Resampling.NEAREST)
 
     def _apply_bubbles(self):
-        draw = ImageDraw.Draw(self.resized_image, mode='RGBA')
+        mask = Image.new(mode='RGBA', size=(self.resized_image.width, self.resized_image.height), color=(0, 0, 0))
+        draw = ImageDraw.Draw(mask, mode='RGBA')
 
         c_w, c_h = self.canvas.winfo_width(), self.canvas.winfo_height()
         i_w, i_h = self.resized_image.width, self.resized_image.height
@@ -224,6 +225,19 @@ class Gui(TestabeGui):
             rel_radius = bubble.radius
             abs_radius = helpers.from_image_to_canvas_bubble_radius(c_w=c_w, c_h=c_h, radius=rel_radius)
             draw.ellipse((x - abs_radius, y - abs_radius, x + abs_radius, y + abs_radius), fill=(255, 0, 0))
+
+        # TODO костыли-костылики 🤦
+        # переписать, чтобы использовался расчет на основе радиуса и координат, а не обход всего массива
+        mask_data = mask.getdata()
+        resized_data = list(self.resized_image.getdata())
+        for idx, data in enumerate(mask_data):
+            if data[0] == 0:
+                resized_data[idx] = (
+                    resized_data[idx][0],
+                    resized_data[idx][1],
+                    resized_data[idx][2],
+                    125)
+        self.resized_image.putdata(resized_data)
 
     def _draw_image_on_canvas(self):
         self.tk_image = ImageTk.PhotoImage(image=self.resized_image)

@@ -50,6 +50,11 @@ class Statechart(ActiveObject):
         self.bubbles.append(bubble_data)
         self.bus.gui.add_bubble(bubble_data)
 
+    def on_image_loaded_undo(self):
+        if len(self.bubbles) > 0:
+            self.bubbles.pop()
+            self.bus.gui.load_image(self.path_to_image, bubbles=self.bubbles)
+
     def launch_new_image_event(self, path_to_image: pathlib.Path) -> None:
         self.post_fifo(Event(signal=signals.NEW_IMAGE, payload=path_to_image))
 
@@ -61,6 +66,9 @@ class Statechart(ActiveObject):
 
     def launch_add_bubble_event(self, bubble: AddBubblePayload):
         self.post_fifo(Event(signal=signals.ADD_BUBBLE, payload=bubble))
+
+    def launch_undo_event(self):
+        self.post_fifo(Event(signal=signals.UNDO))
 
 
 @spy_on
@@ -100,6 +108,9 @@ def image_loaded(s: Statechart, e: Event) -> return_status:
         status = return_status.HANDLED
     elif e.signal == signals.SAVE_IMAGE:
         s.on_image_loaded_save_image(e.payload)
+        status = return_status.HANDLED
+    elif e.signal == signals.UNDO:
+        s.on_image_loaded_undo()
         status = return_status.HANDLED
     else:
         s.temp.fun = init_state

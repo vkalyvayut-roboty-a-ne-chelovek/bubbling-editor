@@ -80,7 +80,7 @@ class Gui(TestabeGui):
             command=self._show_new_image_popup)
         self.new_image_btn.grid(row=0, column=0, sticky='w')
         self.root.bind('<Control-n>', lambda _: self._show_new_image_popup())
-        self.root.bind('<Control-n>', lambda _: self.bus.statechart.launch_new_image_event('/home/user28/projects/python/bubbling-editor/tests/assets/smiley@5.png'))
+        # self.root.bind('<Control-n>', lambda _: self.bus.statechart.launch_new_image_event('/home/user28/projects/python/bubbling-editor/tests/assets/smiley@5.png'))
 
 
         self.open_image_btn = tkinter.Button(
@@ -110,6 +110,12 @@ class Gui(TestabeGui):
 
         self.bubble_radius_label.grid(column=0, row=0, sticky='nesw')
         self.bubble_radius_slider.grid(column=1, row=0, sticky='ew')
+
+        self.undo_btn = tkinter.Button(
+            self.instruments_panel, text='UNDO',
+            command=self.bus.statechart.launch_undo_event)
+        self.undo_btn.grid(row=0, column=4, sticky='w')
+        self.root.bind('<Control-z>', lambda _: self.bus.statechart.launch_undo_event())
 
 
         self.root.bind('<Configure>', lambda _: self._redraw_image_with_bubbles())

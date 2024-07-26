@@ -81,12 +81,26 @@ class TestStatechart(unittest.TestCase):
         self._assert_spy_check(expected_spy, actual_spy)
 
     def test_add_bubble(self):
-        self.s.post_fifo(Event(signal=signals.LOAD_IMAGE, payload=pathlib.Path('./assets/smiley.png')))
-        self.s.post_fifo(Event(signal=signals.ADD_BUBBLE, payload=AddBubblePayload(pos=[0, 0], radius=0)))
-        self.s.post_fifo(Event(signal=signals.ADD_BUBBLE, payload=AddBubblePayload(pos=[0, 0], radius=0)))
+        self.s.launch_load_image_event('./assets/smiley.png')
+        self.s.launch_add_bubble_event(AddBubblePayload(pos=[0, 0], radius=0))
+        self.s.launch_add_bubble_event(AddBubblePayload(pos=[0, 0], radius=0))
         time.sleep(0.1)
 
         expected_spy = ['START', 'SEARCH_FOR_SUPER_SIGNAL:init_state', 'ENTRY_SIGNAL:init_state', 'INIT_SIGNAL:init_state', '<- Queued:(0) Deferred:(0)', 'LOAD_IMAGE:init_state', 'SEARCH_FOR_SUPER_SIGNAL:image_loaded', 'ENTRY_SIGNAL:image_loaded', 'INIT_SIGNAL:image_loaded', '<- Queued:(2) Deferred:(0)', 'ADD_BUBBLE:image_loaded', 'ADD_BUBBLE:image_loaded:HOOK', '<- Queued:(1) Deferred:(0)', 'ADD_BUBBLE:image_loaded', 'ADD_BUBBLE:image_loaded:HOOK', '<- Queued:(0) Deferred:(0)']
+
+        actual_spy = self.s.spy()
+
+        self._assert_spy_check(expected_spy, actual_spy)
+
+    def test_undo(self):
+        self.s.launch_load_image_event('./assets/smiley.png')
+        self.s.launch_add_bubble_event(AddBubblePayload(pos=[0, 0], radius=0))
+        self.s.launch_add_bubble_event(AddBubblePayload(pos=[0, 0], radius=0))
+        time.sleep(0.1)
+        self.s.launch_undo_event()
+        time.sleep(0.1)
+
+        expected_spy = ['START', 'SEARCH_FOR_SUPER_SIGNAL:init_state', 'ENTRY_SIGNAL:init_state', 'INIT_SIGNAL:init_state', '<- Queued:(0) Deferred:(0)', 'LOAD_IMAGE:init_state', 'SEARCH_FOR_SUPER_SIGNAL:image_loaded', 'ENTRY_SIGNAL:image_loaded', 'INIT_SIGNAL:image_loaded', '<- Queued:(2) Deferred:(0)', 'ADD_BUBBLE:image_loaded', 'ADD_BUBBLE:image_loaded:HOOK', '<- Queued:(1) Deferred:(0)', 'ADD_BUBBLE:image_loaded', 'ADD_BUBBLE:image_loaded:HOOK', '<- Queued:(0) Deferred:(0)', 'UNDO:image_loaded', 'UNDO:image_loaded:HOOK', '<- Queued:(0) Deferred:(0)']
 
         actual_spy = self.s.spy()
 

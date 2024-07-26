@@ -29,6 +29,12 @@ class TestabeGui:
     def disable_click_listener(self):
         pass
 
+    def enable_bubble_radius_slider(self):
+        pass
+
+    def disable_bubble_radius_slider(self):
+        pass
+
     def load_image(self, path_to_image: pathlib.Path, bubbles: list) -> None:
         pass
 
@@ -47,6 +53,8 @@ class Gui(TestabeGui):
         self.tk_image: ImageTk = None
         self.image_on_canvas = None
         self.bubbles: list = []
+
+        self._temp_bubble_coords = None
 
     def make_gui(self):
         self.root = tkinter.Tk()
@@ -70,20 +78,39 @@ class Gui(TestabeGui):
         self.new_image_btn = tkinter.Button(
             self.instruments_panel, text='NEW',
             command=self._show_new_image_popup)
-        self.new_image_btn.grid(row=0, column=0, sticky='n')
+        self.new_image_btn.grid(row=0, column=0, sticky='w')
         self.root.bind('<Control-n>', lambda _: self._show_new_image_popup())
+        self.root.bind('<Control-n>', lambda _: self.bus.statechart.launch_new_image_event('/home/user28/projects/python/bubbling-editor/tests/assets/smiley@5.png'))
+
 
         self.open_image_btn = tkinter.Button(
             self.instruments_panel, text='OPEN',
             command=self._show_open_image_popup)
-        self.open_image_btn.grid(row=0, column=1, sticky='n')
+        self.open_image_btn.grid(row=0, column=1, sticky='w')
         self.root.bind('<Control-o>', lambda _: self._show_open_image_popup())
 
         self.save_image_btn = tkinter.Button(
             self.instruments_panel, text='SAVE',
             command=self._show_save_image_popup)
-        self.save_image_btn.grid(row=0, column=2, sticky='n')
+        self.save_image_btn.grid(row=0, column=2, sticky='w')
         self.root.bind('<Control-s>', lambda _: self._show_save_image_popup())
+
+        self.bubble_radius_frame = tkinter.Frame(self.instruments_panel)
+        self.bubble_radius_var = tkinter.IntVar(value=0)
+        self.bubble_radius_label = tkinter.Label(self.bubble_radius_frame, textvariable=self.bubble_radius_var, width=5)
+        self.bubble_radius_slider = tkinter.Scale(self.bubble_radius_frame,
+                                                  from_=5, to=250, length=150, resolution=5, showvalue=False,
+                                                  orient='horizontal', variable=self.bubble_radius_var,
+                                                  state='disabled')
+
+        self.bubble_radius_frame.grid(row=0, column=3, sticky='nesw')
+        self.bubble_radius_frame.columnconfigure(0, weight=1)
+        self.bubble_radius_frame.rowconfigure(0, weight=1)
+        self.bubble_radius_frame.columnconfigure(1, weight=1)
+
+        self.bubble_radius_label.grid(column=0, row=0, sticky='nesw')
+        self.bubble_radius_slider.grid(column=1, row=0, sticky='ew')
+
 
         self.root.bind('<Configure>', lambda _: self._redraw_image_with_bubbles())
 
@@ -108,21 +135,46 @@ class Gui(TestabeGui):
         self.canvas.unbind('<Button-1>')
         self.canvas.unbind('<Motion>')
 
-    def _draw_temp_bubble(self, x, y) -> None:
+    def enable_bubble_radius_slider(self):
+        self.bubble_radius_slider['state'] = 'normal'
+        self.root.bind('<Button-4>', lambda _: self._update_bubble_size(delta_change=-5))
+        self.root.bind('<Button-5>', lambda _: self._update_bubble_size(delta_change=+5))
+
+    def disable_bubble_radius_slider(self):
+        self.bubble_radius_slider['state'] = 'disabled'
+        self.root.unbind('<Button-4>')
+        self.root.unbind('<Button-5>')
+
+    def _draw_temp_bubble(self, x: int = None, y: int = None) -> None:
+        if (x is None) and len(self._temp_bubble_coords) == 2:
+            x = self._temp_bubble_coords[0]
+
+        if (y is None) and len(self._temp_bubble_coords) == 2:
+            y = self._temp_bubble_coords[1]
+
         for bubble in self.canvas.gettags('#temp_bubble'):
             self.canvas.delete(bubble)
+
+        if y is None or x is None:
+            return
+
+        self._temp_bubble_coords = [x, y]
 
         c_w, c_h = self.canvas.winfo_width(), self.canvas.winfo_height()
         i_w, i_h = self.resized_image.width, self.resized_image.height
         x, y = helpers.clamp_coords_in_image_area(i_w, i_h, c_w, c_h, x, y)
-        self.canvas.create_oval(x - 50, y - 50, x + 50, y + 50, fill='red', tags=('#temp_bubble',))
+        radius = int(self.bubble_radius_var.get())
+        self.canvas.create_oval(x - radius, y - radius, x + radius, y + radius, fill='red', tags=('#temp_bubble',))
 
     def _on_canvas_click(self, x, y) -> None:
         c_w, c_h = self.canvas.winfo_width(), self.canvas.winfo_height()
         i_w, i_h = self.resized_image.width, self.resized_image.height
         rel_x, rel_y = helpers.from_canvas_to_image_coords(i_w=i_w, i_h=i_h, c_w=c_w, c_h=c_h, x=x, y=y)
 
-        self.bus.statechart.launch_add_bubble_event(AddBubblePayload(pos=[rel_x, rel_y], radius=50))
+        abs_radius = int(self.bubble_radius_var.get())
+        rel_radius = helpers.from_canvas_to_image_bubble_radius(c_w=c_w, c_h=c_h, radius=abs_radius)
+
+        self.bus.statechart.launch_add_bubble_event(AddBubblePayload(pos=[rel_x, rel_y], radius=rel_radius))
 
     def add_bubble(self, bubble: AddBubblePayload) -> None:
         self.bubbles.append(bubble)
@@ -159,12 +211,19 @@ class Gui(TestabeGui):
     def _apply_bubbles(self):
         draw = ImageDraw.Draw(self.resized_image, mode='RGBA')
 
+        c_w, c_h = self.canvas.winfo_width(), self.canvas.winfo_height()
         i_w, i_h = self.resized_image.width, self.resized_image.height
+
+        new_sizes = helpers.get_size_to_resize(
+            i_w=i_w, i_h=i_h,
+            c_w=c_w, c_h=c_h
+        )
 
         for bubble in self.bubbles:
             x, y = bubble.pos[0] * i_w, bubble.pos[1] * i_h
-            radius = bubble.radius
-            draw.ellipse((x - radius, y - radius, x + radius, y + radius), fill=(255, 0, 0))
+            rel_radius = bubble.radius
+            abs_radius = helpers.from_image_to_canvas_bubble_radius(c_w=c_w, c_h=c_h, radius=rel_radius)
+            draw.ellipse((x - abs_radius, y - abs_radius, x + abs_radius, y + abs_radius), fill=(255, 0, 0))
 
     def _draw_image_on_canvas(self):
         self.tk_image = ImageTk.PhotoImage(image=self.resized_image)
@@ -174,6 +233,13 @@ class Gui(TestabeGui):
             image=self.tk_image,
             tags=('#image',)
         )
+
+    def _update_bubble_size(self, delta_change):
+        current_size = int(self.bubble_radius_var.get())
+        new_size = current_size + delta_change
+        self.bubble_radius_var.set(new_size)
+
+        self._draw_temp_bubble()
 
     def _show_new_image_popup(self):
         path_to_image = filedialog.askopenfilename()
@@ -189,3 +255,4 @@ class Gui(TestabeGui):
         path_to_image = filedialog.asksaveasfilename()
         if path_to_image:
             self.bus.statechart.launch_save_image_event(path_to_image)
+

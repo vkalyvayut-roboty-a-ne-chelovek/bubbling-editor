@@ -39,10 +39,12 @@ class Statechart(ActiveObject):
     def on_image_loaded_entry(self):
         self.bus.gui.enable_save_btn()
         self.bus.gui.enable_click_listener()
+        self.bus.gui.enable_bubble_radius_slider()
 
     def on_image_loaded_exit(self):
         self.bus.gui.disable_save_btn()
         self.bus.gui.disable_click_listener()
+        self.bus.gui.disable_bubble_radius_slider()
 
     def on_image_loaded_add_bubble(self, bubble_data: AddBubblePayload):
         self.bubbles.append(bubble_data)

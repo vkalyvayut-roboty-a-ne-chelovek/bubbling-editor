@@ -57,6 +57,12 @@ def get_size_to_resize(i_w: int, i_h: int, c_w: int, c_h: int) -> list[int, int]
         scale = c_h / i_h
         result = [i_w * scale, i_h * scale]
 
-    result = [clamp(0, c_w, result[0]), clamp(0, c_h, result[1])]
-
     return [int(i) for i in result]
+
+
+def from_canvas_to_image_bubble_radius(c_w, c_h, radius) -> float:
+    return (c_w / c_h) * radius
+
+
+def from_image_to_canvas_bubble_radius(c_w, c_h, radius) -> float:
+    return radius * 1.0 / (c_w / c_h)

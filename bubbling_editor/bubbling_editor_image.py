@@ -34,7 +34,7 @@ class BubblingEditorImage:
         i_w, i_h = self.resized_image.width, self.resized_image.height
         x, y = i_w, i_h
         if float(self.forced_scale_var.get()) == 0:
-            x, y, scale = helpers.get_size_to_resize(
+            x, y, scale = helpers.get_size_to_fit(
                 i_w=i_w, i_h=i_h,
                 c_w=c_w, c_h=c_h
             )
@@ -50,7 +50,7 @@ class BubblingEditorImage:
         c_w, c_h = self.canvas.winfo_width(), self.canvas.winfo_height()
         i_w, i_h = self.resized_image.width, self.resized_image.height
 
-        new_sizes = helpers.get_size_to_resize(
+        new_sizes = helpers.get_size_to_fit(
             i_w=i_w, i_h=i_h,
             c_w=c_w, c_h=c_h
         )

@@ -44,7 +44,7 @@ def from_image_to_canvas_coords(i_w, i_h, c_w, c_h, x, y) -> tuple[int, int]:
     return abs_x, abs_y
 
 
-def get_size_to_resize(i_w: int, i_h: int, c_w: int, c_h: int) -> list[int, int, float]:
+def get_size_to_fit(i_w: int, i_h: int, c_w: int, c_h: int) -> list[int, int, float]:
     result = [1, 1]
     scale = 1
 

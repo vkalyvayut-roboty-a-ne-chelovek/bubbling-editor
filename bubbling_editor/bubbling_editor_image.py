@@ -20,11 +20,14 @@ class BubblingEditorImage:
         self.image_scale: float = 0
         self.image_forced_scale: float = None
 
-    def redraw_image(self) -> None:
+        self.applied_bubbles = []
+
+    def redraw_image(self, apply_only_new_bubbles: bool = False) -> None:
         if self.path_to_image:
-            self._clear_image()
-            self._load_raw_image()
-            self._apply_bubbles()
+            if not apply_only_new_bubbles:
+                self._clear_image()
+                self._load_raw_image()
+            self._apply_bubbles(apply_only_new_bubbles=apply_only_new_bubbles)
             self._resize_raw_image()
             self._draw_image_on_canvas()
 
@@ -40,9 +43,21 @@ class BubblingEditorImage:
     def _load_raw_image(self):
         self.original_image = Image.open(self.path_to_image).convert(mode='RGBA')
 
-    def _apply_bubbles(self):
+    def _apply_bubbles(self, apply_only_new_bubbles: bool = False):
         for bubble in self.bubbles:
-            BubblingEditorBubbleOnImage(self.original_image, bubble=bubble)
+            if apply_only_new_bubbles and bubble in self.applied_bubbles:
+                continue
+
+            mask = BubblingEditorBubbleOnImage(
+                image_w=self.original_image.width,
+                image_h=self.original_image.height,
+                bubble=bubble).make_mask()
+            for idx in mask:
+                pixel_data = self.original_image.getpixel(idx)
+                new_pixel_data = (pixel_data[1], pixel_data[1], pixel_data[2], 127)
+                self.original_image.putpixel(idx, value=new_pixel_data)
+
+            self.applied_bubbles.append(bubble)
 
     def _resize_raw_image(self):
         c_w, c_h = self.canvas.winfo_width(), self.canvas.winfo_height()
@@ -71,11 +86,10 @@ class BubblingEditorImage:
         )
 
     def get_bubbles_coords_on_image(self, c_x, c_y, radius) -> list[float, float, float]:
-
         i_w, i_h = self.resized_image.width, self.resized_image.height
         c_w, c_h = self.canvas.winfo_width(), self.canvas.winfo_height()
         x, y = helpers.from_canvas_to_image_coords(i_w=i_w, i_h=i_h, c_w=c_w, c_h=c_h, x=c_x, y=c_y)
-        new_data = [x, y, radius * 1 / self.image_scale]
+        new_data = [x, y, int(radius * 1 / self.image_scale)]
 
         return new_data
 
@@ -88,7 +102,7 @@ class BubblingEditorImage:
 
     def add_bubble(self, bubble: AddBubblePayload) -> None:
         self.bubbles.append(bubble)
-        self.redraw_image()
+        self.redraw_image(apply_only_new_bubbles=True)
 
     def update_bubbles(self, bubbles: list[AddBubblePayload]) -> None:
         self.bubbles = bubbles

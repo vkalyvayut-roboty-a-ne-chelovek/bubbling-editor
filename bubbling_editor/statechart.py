@@ -51,9 +51,10 @@ class Statechart(ActiveObject):
         self.bus.gui.add_bubble(bubble_data)
 
     def on_image_loaded_undo(self):
-        if len(self.bubbles) > 0:
-            self.bubbles.pop()
-            self.bus.gui.redraw_image()
+        pass
+        # if len(self.bubbles) > 0:
+        #     self.bubbles.pop()
+        #     self.bus.gui.redraw_image()
 
     def launch_new_image_event(self, path_to_image: pathlib.Path) -> None:
         self.post_fifo(Event(signal=signals.NEW_IMAGE, payload=path_to_image))

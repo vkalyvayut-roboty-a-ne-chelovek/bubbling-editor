@@ -83,7 +83,7 @@ class Gui(TestabeGui):
             command=self._show_new_image_popup)
         self.new_image_btn.grid(row=0, column=0, sticky='w')
         self.root.bind('<Control-n>', lambda _: self._show_new_image_popup())
-        self.root.bind('<Control-n>', lambda _: self.bus.statechart.launch_new_image_event('/home/user28/projects/python/bubbling-editor/tests/assets/___.jpg'))
+        self.root.bind('<Control-n>', lambda _: self.bus.statechart.launch_new_image_event('/home/user28/projects/python/bubbling-editor/tests/assets/smiley.png'))
 
 
         self.open_image_btn = tkinter.Button(
@@ -120,14 +120,14 @@ class Gui(TestabeGui):
         self.undo_btn.grid(row=0, column=4, sticky='w')
         self.root.bind('<Control-z>', lambda _: self.bus.statechart.launch_undo_event())
 
-        self.forced_scale_var = tkinter.DoubleVar(value=0.25)
+        self.forced_scale_var = tkinter.DoubleVar(value=0)
         self.forced_scale_frame = tkinter.Frame(self.instruments_panel)
         self.forced_scale_frame.grid(row=0, column=5, sticky='nesw')
         self.forced_scale_input = tkinter.Entry(self.forced_scale_frame, textvariable=self.forced_scale_var)
         self.forced_scale_input.grid(column=0, row=0, sticky='w')
-        self.forced_scale_apply_btn = tkinter.Button(self.forced_scale_frame, text='SCALE', command=self.redraw_image)
+        self.forced_scale_apply_btn = tkinter.Button(self.forced_scale_frame, text='SCALE', command=self.update_image_with_forced_scale)
         self.forced_scale_apply_btn.grid(column=1, row=0, sticky='w')
-        self.forced_scale_apply_btn = tkinter.Button(self.forced_scale_frame, text='RESET', command=lambda: self.forced_scale_var.set(0) and self.redraw_image())
+        self.forced_scale_apply_btn = tkinter.Button(self.forced_scale_frame, text='RESET', command=self.reset_forced_scale)
         self.forced_scale_apply_btn.grid(column=2, row=0, sticky='w')
 
 
@@ -166,25 +166,26 @@ class Gui(TestabeGui):
         self.root.unbind('<Button-5>')
 
     def _draw_temp_bubble(self, x: int = None, y: int = None) -> None:
-        if (x is None) and self._temp_bubble_coords and len(self._temp_bubble_coords) == 2:
-            x = self._temp_bubble_coords[0]
-
-        if (y is None) and self._temp_bubble_coords and len(self._temp_bubble_coords) == 2:
-            y = self._temp_bubble_coords[1]
-
-        for bubble in self.canvas.gettags('#temp_bubble'):
-            self.canvas.delete(bubble)
-
-        if y is None or x is None:
-            return
-
-        self._temp_bubble_coords = [x, y]
-
-        c_w, c_h = self.canvas.winfo_width(), self.canvas.winfo_height()
-        i_w, i_h = self.resized_image.width, self.resized_image.height
-        x, y = helpers.clamp_coords_in_image_area(i_w, i_h, c_w, c_h, x, y)
-        radius = int(self.bubble_radius_var.get())
-        self.canvas.create_oval(x - radius, y - radius, x + radius, y + radius, fill='red', tags=('#temp_bubble',))
+        pass
+        # if (x is None) and self._temp_bubble_coords and len(self._temp_bubble_coords) == 2:
+        #     x = self._temp_bubble_coords[0]
+        #
+        # if (y is None) and self._temp_bubble_coords and len(self._temp_bubble_coords) == 2:
+        #     y = self._temp_bubble_coords[1]
+        #
+        # for bubble in self.canvas.gettags('#temp_bubble'):
+        #     self.canvas.delete(bubble)
+        #
+        # if y is None or x is None:
+        #     return
+        #
+        # self._temp_bubble_coords = [x, y]
+        #
+        # c_w, c_h = self.canvas.winfo_width(), self.canvas.winfo_height()
+        # i_w, i_h = self.resized_image.width, self.resized_image.height
+        # x, y = helpers.clamp_coords_in_image_area(i_w, i_h, c_w, c_h, x, y)
+        # radius = int(self.bubble_radius_var.get())
+        # self.canvas.create_oval(x - radius, y - radius, x + radius, y + radius, fill='red', tags=('#temp_bubble',))
 
     def _on_canvas_click(self, x, y) -> None:
         rel_x, rel_y, rel_radius = self.image.get_bubbles_coords_on_image(x, y, self.bubble_radius_var.get())
@@ -192,19 +193,31 @@ class Gui(TestabeGui):
 
     def load_image(self, path_to_image: pathlib.Path, bubbles: list) -> None:
         self.image = BubblingEditorImage(canvas=self.canvas, path_to_image=path_to_image, bubbles=bubbles)
+        self.redraw_image()
 
     def redraw_image(self):
-        self.image.redraw_image()
+        if self.image:
+            self.image.redraw_image()
+
+    def update_image_with_forced_scale(self):
+        if self.image:
+            forced_scale = None if float(self.forced_scale_var.get()) <= 0 else float(self.forced_scale_var.get())
+            self.image.set_forced_scale(forced_scale)
+
+    def reset_forced_scale(self):
+        self.forced_scale_var.set(0)
+        self.update_image_with_forced_scale()
 
     def add_bubble(self, bubble: AddBubblePayload) -> None:
         self.image.add_bubble(bubble)
 
     def _update_bubble_size(self, delta_change):
-        current_size = int(self.bubble_radius_var.get())
-        new_size = current_size + delta_change
-        self.bubble_radius_var.set(new_size)
-
-        self._draw_temp_bubble()
+        pass
+        # current_size = int(self.bubble_radius_var.get())
+        # new_size = current_size + delta_change
+        # self.bubble_radius_var.set(new_size)
+        #
+        # self._draw_temp_bubble()
 
     def _show_new_image_popup(self):
         path_to_image = filedialog.askopenfilename()

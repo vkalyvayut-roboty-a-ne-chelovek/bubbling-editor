@@ -3,7 +3,6 @@ from PIL import Image, ImageTk, ImageDraw, ImageOps
 
 import bubbling_editor.helpers as helpers
 from bubbling_editor.misc import AddBubblePayload
-from bubbling_editor.bubbling_editor_bubble_on_image import BubblingEditorBubbleOnImage
 
 
 class BubblingEditorImage:
@@ -45,6 +44,11 @@ class BubblingEditorImage:
         self.original_image = Image.open(self.path_to_image).convert(mode='RGBA')
 
     def _apply_bubbles(self):
+        """
+        накладываю одно изображение на другое с использованием маски
+        перед этим делаю накладываемое изображение полупрозрачным,
+        а маску, с нарисованными на ней кругами, инвертирую
+        """
         image1 = self.resized_image.copy()
         image2 = self.resized_image.copy()
         image2.putalpha(127)

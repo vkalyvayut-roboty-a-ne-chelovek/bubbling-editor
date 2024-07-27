@@ -32,7 +32,7 @@ def from_canvas_to_image_coords(i_w, i_h, c_w, c_h, x, y) -> tuple[int, int]:
     return rel_x, rel_y
 
 
-def from_image_to_canvas_coords(i_w, i_h, c_w, c_h, x, y) -> tuple[int, int]:
+def from_image_to_canvas_coords(i_w, i_h, c_w, c_h, x, y) -> tuple[int]:
     center_x, center_y = c_w / 2.0, c_h / 2.0
 
     min_x = center_x - i_w / 2
@@ -44,19 +44,20 @@ def from_image_to_canvas_coords(i_w, i_h, c_w, c_h, x, y) -> tuple[int, int]:
     return abs_x, abs_y
 
 
-def get_size_to_fit(i_w: int, i_h: int, c_w: int, c_h: int) -> list[int, int, float]:
+def get_size_to_fit(i_w: int, i_h: int, c_w: int, c_h: int) -> list[int | float]:
     result = [1, 1]
     scale = 1
 
     if i_w == i_h:
         min_side = min(c_w, c_h)
         scale = min_side / i_w
-        result = [i_w * scale, i_h * scale]
     elif i_w / i_h > 1:
-        scale = c_w / i_w
-        result = [i_w * scale, i_h * scale]
+        min_side = min(c_w, c_h)
+        scale = min_side / i_w
     else:
-        scale = c_h / i_h
-        result = [i_w * scale, i_h * scale]
+        min_side = min(c_w, c_h)
+        scale = min_side / i_h
 
-    return int(result[0]), int(result[1]), scale
+    result = [i_w * scale, i_h * scale]
+
+    return [int(math.floor(result[0])), int(math.floor(result[1])), scale]

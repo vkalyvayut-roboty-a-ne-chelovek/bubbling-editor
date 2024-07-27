@@ -49,10 +49,8 @@ def get_size_to_fit(i_w: int, i_h: int, c_w: int, c_h: int) -> list[int, int, fl
     scale = 1
 
     if i_w == i_h:
-        # выбираем наименьшую сторону, чтобы в нее влезло изображение
-        size = c_h if c_w / c_h > 1 else c_w
-        # определяем масштаб изображения
-        scale = size / i_w if size > i_w else 1 / (i_w / size)
+        min_side = min(c_w, c_h)
+        scale = min_side / i_w
         result = [i_w * scale, i_h * scale]
     elif i_w / i_h > 1:
         scale = c_w / i_w

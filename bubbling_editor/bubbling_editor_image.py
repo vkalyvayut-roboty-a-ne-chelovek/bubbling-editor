@@ -104,34 +104,20 @@ class BubblingEditorImage:
             tags=('#image',)
         )
 
-
-
-
-
-
     def get_bubbles_coords_on_image(self, c_x, c_y, radius) -> list[float, float, float]:
         return [0, 0, 0]
 
-    def add_bubble(self, bubble) -> None:
-        pass
+    def get_clamped_coords_on_image(self, x: int, y: int) -> list[int, int]:
+        i_w, i_h = self.resized_image.width, self.resized_image.height
+        c_w, c_h = self.canvas.winfo_width(), self.canvas.winfo_height()
+        x, y = helpers.clamp_coords_in_image_area(i_w=i_w, i_h=i_h, c_w=c_w, c_h=c_h, x=x, y=y)
 
+        return [x, y]
 
-    # def load_image(self, path_to_image: pathlib.Path, bubbles: list) -> None:
-    #     self.original_image = Image.open(path_to_image)
-    #     self.path_to_image = path_to_image
-    #     self.bubbles = bubbles
-    #     self.forced_scale_var.set(0)
-    #
-    #     self.redraw_image()
+    def add_bubble(self, bubble: AddBubblePayload) -> None:
+        self.bubbles.append(bubble)
+        self.resized_image()
 
-
-    def _on_canvas_click(self, x, y) -> None:
-        # c_w, c_h = self.canvas.winfo_width(), self.canvas.winfo_height()
-        # i_w, i_h = self.resized_image.width, self.resized_image.height
-        # rel_x, rel_y = helpers.from_canvas_to_image_coords(i_w=i_w, i_h=i_h, c_w=c_w, c_h=c_h, x=x, y=y)
-        #
-        # abs_radius = int(self.bubble_radius_var.get())
-        # rel_radius = helpers.from_canvas_to_image_bubble_radius(c_w=c_w, c_h=c_h, radius=abs_radius)
-
-        rel_x, rel_y, rel_radius = self.image.get_bubbles_coords_on_image(x, y, self.bubble_radius_var.get())
-        self.bus.statechart.launch_add_bubble_event(AddBubblePayload(pos=[rel_x, rel_y], radius=rel_radius))
+    def update_bubbles(self, bubbles: list[AddBubblePayload]) -> None:
+        self.bubbles = bubbles
+        self.resized_image()

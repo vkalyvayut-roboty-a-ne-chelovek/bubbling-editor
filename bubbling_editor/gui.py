@@ -49,15 +49,14 @@ class TestabeGui:
 
 class Gui(TestabeGui):
     def __init__(self, bus: Bus):
-        self.bus = bus
-        self.bus.register('gui', self)
+        super().__init__(bus=bus)
         self.root: tkinter.Tk = None
 
         self.image: BubblingEditorImage = None
 
         self.forced_scale_var: tkinter.DoubleVar = None
 
-        self._temp_bubble_coords = None
+        self._temp_bubble_coords: list[int, int] = [0, 0]
 
     def make_gui(self):
         self.root = tkinter.Tk()
@@ -130,8 +129,6 @@ class Gui(TestabeGui):
         self.forced_scale_apply_btn = tkinter.Button(self.forced_scale_frame, text='RESET', command=self.reset_forced_scale)
         self.forced_scale_apply_btn.grid(column=2, row=0, sticky='w')
 
-
-
         self.root.bind('<Configure>', lambda _: self.redraw_image())
 
     def run(self) -> None:
@@ -166,26 +163,20 @@ class Gui(TestabeGui):
         self.root.unbind('<Button-5>')
 
     def _draw_temp_bubble(self, x: int = None, y: int = None) -> None:
-        pass
-        # if (x is None) and self._temp_bubble_coords and len(self._temp_bubble_coords) == 2:
-        #     x = self._temp_bubble_coords[0]
-        #
-        # if (y is None) and self._temp_bubble_coords and len(self._temp_bubble_coords) == 2:
-        #     y = self._temp_bubble_coords[1]
-        #
-        # for bubble in self.canvas.gettags('#temp_bubble'):
-        #     self.canvas.delete(bubble)
-        #
-        # if y is None or x is None:
-        #     return
-        #
-        # self._temp_bubble_coords = [x, y]
-        #
-        # c_w, c_h = self.canvas.winfo_width(), self.canvas.winfo_height()
-        # i_w, i_h = self.resized_image.width, self.resized_image.height
-        # x, y = helpers.clamp_coords_in_image_area(i_w, i_h, c_w, c_h, x, y)
-        # radius = int(self.bubble_radius_var.get())
-        # self.canvas.create_oval(x - radius, y - radius, x + radius, y + radius, fill='red', tags=('#temp_bubble',))
+        if not self.image:
+            return
+
+        if x is None or y is None:
+            x, y = self._temp_bubble_coords
+
+        x, y = self.image.get_clamped_coords_on_image(x, y)
+        self._temp_bubble_coords = [x, y]
+
+        for bubble in self.canvas.gettags('#temp_bubble'):
+            self.canvas.delete(bubble)
+
+        radius = int(self.bubble_radius_var.get())
+        self.canvas.create_oval(x - radius, y - radius, x + radius, y + radius, fill='red', tags=('#temp_bubble',))
 
     def _on_canvas_click(self, x, y) -> None:
         rel_x, rel_y, rel_radius = self.image.get_bubbles_coords_on_image(x, y, self.bubble_radius_var.get())
@@ -211,13 +202,14 @@ class Gui(TestabeGui):
     def add_bubble(self, bubble: AddBubblePayload) -> None:
         self.image.add_bubble(bubble)
 
+    def update_bubbles(self, bubbles: list[AddBubblePayload]) -> None:
+        self.image.update_bubbles(bubbles)
+
     def _update_bubble_size(self, delta_change):
-        pass
-        # current_size = int(self.bubble_radius_var.get())
-        # new_size = current_size + delta_change
-        # self.bubble_radius_var.set(new_size)
-        #
-        # self._draw_temp_bubble()
+        current_size = int(self.bubble_radius_var.get())
+        new_size = current_size + delta_change
+        self.bubble_radius_var.set(new_size)
+        self._draw_temp_bubble()
 
     def _show_new_image_popup(self):
         path_to_image = filedialog.askopenfilename()

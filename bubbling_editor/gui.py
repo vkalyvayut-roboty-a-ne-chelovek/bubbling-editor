@@ -46,6 +46,9 @@ class TestabeGui:
     def add_bubble(self, bubble: AddBubblePayload) -> None:
         pass
 
+    def update_bubbles(self, bubbles: list[AddBubblePayload]) -> None:
+        pass
+
 
 class Gui(TestabeGui):
     def __init__(self, bus: Bus):
@@ -82,7 +85,6 @@ class Gui(TestabeGui):
             command=self._show_new_image_popup)
         self.new_image_btn.grid(row=0, column=0, sticky='w')
         self.root.bind('<Control-n>', lambda _: self._show_new_image_popup())
-        self.root.bind('<Control-n>', lambda _: self.bus.statechart.launch_new_image_event('/home/user28/projects/python/bubbling-editor/tests/assets/smiley.png'))
 
 
         self.open_image_btn = tkinter.Button(
@@ -179,7 +181,7 @@ class Gui(TestabeGui):
         self.canvas.create_oval(x - radius, y - radius, x + radius, y + radius, fill='red', tags=('#temp_bubble',))
 
     def _on_canvas_click(self, x, y) -> None:
-        rel_x, rel_y, rel_radius = self.image.get_bubbles_coords_on_image(x, y, self.bubble_radius_var.get())
+        rel_x, rel_y, rel_radius = self.image.get_bubbles_coords_on_image(x, y, int(self.bubble_radius_var.get()))
         self.bus.statechart.launch_add_bubble_event(AddBubblePayload(pos=[rel_x, rel_y], radius=rel_radius))
 
     def load_image(self, path_to_image: pathlib.Path, bubbles: list) -> None:

@@ -60,11 +60,3 @@ def get_size_to_fit(i_w: int, i_h: int, c_w: int, c_h: int) -> list[int, int, fl
         result = [i_w * scale, i_h * scale]
 
     return int(result[0]), int(result[1]), scale
-
-
-def from_canvas_to_image_bubble_radius(c_w, c_h, radius) -> float:
-    return (c_w / c_h) * radius
-
-
-def from_image_to_canvas_bubble_radius(c_w, c_h, radius) -> float:
-    return radius * 1.0 / (c_w / c_h)

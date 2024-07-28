@@ -43,15 +43,22 @@ class BubblingEditorImage:
     def _load_raw_image(self):
         self.original_image = Image.open(self.path_to_image).convert(mode='RGBA')
 
-    def _apply_bubbles(self):
+    def _apply_bubbles(self, no_alpha: bool = False):
         """
         накладываю одно изображение на другое с использованием маски
         перед этим делаю накладываемое изображение полупрозрачным,
         а маску, с нарисованными на ней кругами, инвертирую
         """
-        image1 = self.resized_image.copy()
-        image2 = self.resized_image.copy()
-        image2.putalpha(127)
+
+        image1: Image = self.resized_image.copy()  # подложка
+        image2: Image = None  # изображение, накладываемое поверх
+
+        if no_alpha:
+            image2: Image = Image.new(mode='RGBA', size=(image1.width, image1.height), color=(255, 0, 0))
+            image2.putalpha(255)
+        else:
+            image2: Image = self.resized_image.copy()
+            image2.putalpha(127)
 
         mask = Image.new(mode='L', size=(self.resized_image.width, self.resized_image.height), color=0)
         mask_draw = ImageDraw.Draw(mask)
@@ -114,3 +121,9 @@ class BubblingEditorImage:
     def update_bubbles(self, bubbles: list[AddBubblePayload]) -> None:
         self.bubbles = bubbles
         self.redraw_image()
+
+    def export(self, path_to_image: pathlib.Path) -> None:
+        self._apply_bubbles(no_alpha=True)
+
+        image_to_export = self.resized_image_to_draw.copy().resize((self.original_image.width, self.original_image.height))
+        image_to_export.save(path_to_image)

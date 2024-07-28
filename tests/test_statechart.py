@@ -66,7 +66,7 @@ class TestStatechart(unittest.TestCase):
         self.s.launch_save_project_event(tmp_file)
         self.setUp()
         time.sleep(0.1)
-        self.s.launch_load_project_event(path_to_image=tmp_file)
+        self.s.launch_load_project_event(path_to_project=tmp_file)
         time.sleep(0.1)
 
         expected_trace = '''

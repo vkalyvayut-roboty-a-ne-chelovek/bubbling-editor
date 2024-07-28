@@ -25,6 +25,12 @@ class TestabeGui:
     def disable_save_btn(self):
         pass
 
+    def enable_export_btn(self):
+        pass
+
+    def disable_export_btn(self):
+        pass
+
     def enable_click_listener(self):
         pass
 
@@ -87,16 +93,21 @@ class Gui(TestabeGui):
         self.root.bind('<Control-n>', lambda _: self._show_new_image_popup())
 
 
-        self.open_image_btn = tkinter.Button(
+        self.open_project_btn = tkinter.Button(
             self.instruments_panel, text='OPEN',
-            command=self._show_open_image_popup)
-        self.open_image_btn.grid(row=0, column=1, sticky='w')
-        self.root.bind('<Control-o>', lambda _: self._show_open_image_popup())
+            command=self._show_open_project_popup)
+        self.open_project_btn.grid(row=0, column=1, sticky='w')
+        self.root.bind('<Control-o>', lambda _: self._show_open_project_popup())
 
-        self.save_image_btn = tkinter.Button(
+        self.save_project_btn = tkinter.Button(
             self.instruments_panel, text='SAVE',
-            command=self._show_save_image_popup)
-        self.save_image_btn.grid(row=0, column=2, sticky='w')
+            command=self._show_save_project_popup)
+        self.save_project_btn.grid(row=0, column=2, sticky='w')
+
+        self.export_image_btn = tkinter.Button(
+            self.instruments_panel, text='SAVE',
+            command=self._show_save_project_popup)
+        self.save_project_btn.grid(row=0, column=3, sticky='w')
 
         self.bubble_radius_frame = tkinter.Frame(self.instruments_panel)
         self.bubble_radius_var = tkinter.IntVar(value=0)
@@ -106,7 +117,7 @@ class Gui(TestabeGui):
                                                   orient='horizontal', variable=self.bubble_radius_var,
                                                   state='disabled')
 
-        self.bubble_radius_frame.grid(row=0, column=3, sticky='nesw')
+        self.bubble_radius_frame.grid(row=0, column=4, sticky='nesw')
         self.bubble_radius_frame.columnconfigure(0, weight=1)
         self.bubble_radius_frame.rowconfigure(0, weight=1)
         self.bubble_radius_frame.columnconfigure(1, weight=1)
@@ -117,12 +128,12 @@ class Gui(TestabeGui):
         self.undo_btn = tkinter.Button(
             self.instruments_panel, text='UNDO',
             command=self.bus.statechart.launch_undo_event)
-        self.undo_btn.grid(row=0, column=4, sticky='w')
+        self.undo_btn.grid(row=0, column=5, sticky='w')
         self.root.bind('<Control-z>', lambda _: self.bus.statechart.launch_undo_event())
 
         self.forced_scale_var = tkinter.DoubleVar(value=0)
         self.forced_scale_frame = tkinter.Frame(self.instruments_panel)
-        self.forced_scale_frame.grid(row=0, column=5, sticky='nesw')
+        self.forced_scale_frame.grid(row=0, column=6, sticky='nesw')
         self.forced_scale_input = tkinter.Entry(self.forced_scale_frame, textvariable=self.forced_scale_var)
         self.forced_scale_input.grid(column=0, row=0, sticky='w')
         self.forced_scale_apply_btn = tkinter.Button(self.forced_scale_frame, text='SCALE', command=self.update_image_with_forced_scale)
@@ -139,15 +150,27 @@ class Gui(TestabeGui):
 
     def enable_save_btn(self):
         if hasattr(self, 'root') and self.root:
-            self.root.bind('<Control-s>', lambda _: self._show_save_image_popup())
+            self.root.bind('<Control-s>', lambda _: self._show_save_project_popup())
         if hasattr(self, 'save_image_btn'):
-            self.save_image_btn['state'] = 'normal'
+            self.save_project_btn['state'] = 'normal'
 
     def disable_save_btn(self):
         if hasattr(self, 'root') and self.root:
             self.root.unbind('<Control-s>')
         if hasattr(self, 'save_image_btn'):
-            self.save_image_btn['state'] = 'disabled'
+            self.save_project_btn['state'] = 'disabled'
+
+    def enable_export_btn(self):
+        if hasattr(self, 'root') and self.root:
+            self.root.bind('<Control-e>', lambda _: self._show_export_image_popup())
+        if hasattr(self, 'export_image_btn'):
+            self.export_image_btn['state'] = 'normal'
+
+    def disable_export_btn(self):
+        if hasattr(self, 'root') and self.root:
+            self.root.unbind('<Control-e>')
+        if hasattr(self, 'export_image_btn'):
+            self.export_image_btn['state'] = 'disabled'
 
     def enable_click_listener(self):
         self.canvas.bind('<Button-1>', lambda e: self._on_canvas_click(e.x, e.y))
@@ -221,13 +244,18 @@ class Gui(TestabeGui):
         if path_to_image:
             self.bus.statechart.launch_new_image_event(path_to_image)
 
-    def _show_open_image_popup(self):
+    def _show_open_project_popup(self):
         path_to_image = filedialog.askopenfilename(filetypes=[('Bubbling Editor Metadata', '.bubbling')])
         if path_to_image:
             self.bus.statechart.launch_load_project_event(path_to_image)
 
-    def _show_save_image_popup(self):
+    def _show_save_project_popup(self):
         path_to_image = filedialog.asksaveasfilename(filetypes=[('Bubbling Editor Metadata', '.bubbling')])
         if path_to_image:
             self.bus.statechart.launch_save_project_event(path_to_image)
+
+    def _show_export_image_popup(self):
+        path_to_image = filedialog.asksaveasfilename(filetypes=[('Image', '.png')])
+        if path_to_image:
+            self.bus.statechart.launch_export_image_event(path_to_image)
 

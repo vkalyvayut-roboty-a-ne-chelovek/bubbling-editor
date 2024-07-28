@@ -97,7 +97,6 @@ class Gui(TestabeGui):
             self.instruments_panel, text='SAVE',
             command=self._show_save_image_popup)
         self.save_image_btn.grid(row=0, column=2, sticky='w')
-        self.root.bind('<Control-s>', lambda _: self._show_save_image_popup())
 
         self.bubble_radius_frame = tkinter.Frame(self.instruments_panel)
         self.bubble_radius_var = tkinter.IntVar(value=0)
@@ -139,10 +138,14 @@ class Gui(TestabeGui):
         self.root.mainloop()
 
     def enable_save_btn(self):
+        if hasattr(self, 'root') and self.root:
+            self.root.bind('<Control-s>', lambda _: self._show_save_image_popup())
         if hasattr(self, 'save_image_btn'):
             self.save_image_btn['state'] = 'normal'
 
     def disable_save_btn(self):
+        if hasattr(self, 'root') and self.root:
+            self.root.unbind('<Control-s>')
         if hasattr(self, 'save_image_btn'):
             self.save_image_btn['state'] = 'disabled'
 
@@ -214,17 +217,17 @@ class Gui(TestabeGui):
         self._draw_temp_bubble()
 
     def _show_new_image_popup(self):
-        path_to_image = filedialog.askopenfilename()
+        path_to_image = filedialog.askopenfilename(filetypes=[('Images', '.jpg .jpeg .png .gif')])
         if path_to_image:
             self.bus.statechart.launch_new_image_event(path_to_image)
 
     def _show_open_image_popup(self):
-        path_to_image = filedialog.askopenfilename()
+        path_to_image = filedialog.askopenfilename(filetypes=[('Bubbling Editor Metadata', '.bubbling')])
         if path_to_image:
-            self.bus.statechart.launch_load_image_event(path_to_image)
+            self.bus.statechart.launch_load_project_event(path_to_image)
 
     def _show_save_image_popup(self):
-        path_to_image = filedialog.asksaveasfilename()
+        path_to_image = filedialog.asksaveasfilename(filetypes=[('Bubbling Editor Metadata', '.bubbling')])
         if path_to_image:
-            self.bus.statechart.launch_save_image_event(path_to_image)
+            self.bus.statechart.launch_save_project_event(path_to_image)
 

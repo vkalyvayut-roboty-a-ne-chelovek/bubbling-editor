@@ -1,3 +1,4 @@
+import json
 import pathlib
 
 from miros import ActiveObject
@@ -30,11 +31,25 @@ class Statechart(ActiveObject):
         self.path_to_image = path_to_image
         self.bus.gui.load_image(path_to_image, bubbles=[])
 
-    def on_init_state_load_image(self, path_to_image: pathlib.Path):
-        pass
+    def on_init_state_load_project(self, path_to_project: pathlib.Path):
+        with open(path_to_project, mode='r', encoding='utf-8') as project_handle:
+            data = json.load(project_handle)
+            path_to_image = data['path_to_image']
+            bubbles = [AddBubblePayload(pos=bubble[0], radius=bubble[1]) for bubble in data['bubbles']]
 
-    def on_image_loaded_save_image(self, path_to_image: pathlib.Path):
-        pass
+            self.path_to_image = path_to_image
+            self.bubbles = bubbles
+
+            self.bus.gui.load_image(data['path_to_image'], bubbles=bubbles)
+
+    def on_image_loaded_save_project(self, path_to_project: pathlib.Path):
+        data = {
+            'version': 0,
+            'path_to_image': str(pathlib.Path(self.path_to_image).absolute()),
+            'bubbles': self.bubbles
+        }
+        with open(path_to_project, mode='w', encoding='utf-8') as project_handle:
+            project_handle.write(json.dumps(data))
 
     def on_image_loaded_entry(self):
         self.bus.gui.enable_save_btn()
@@ -58,11 +73,11 @@ class Statechart(ActiveObject):
     def launch_new_image_event(self, path_to_image: pathlib.Path) -> None:
         self.post_fifo(Event(signal=signals.NEW_IMAGE, payload=path_to_image))
 
-    def launch_load_image_event(self, path_to_image: pathlib.Path) -> None:
-        self.post_fifo(Event(signal=signals.LOAD_IMAGE, payload=path_to_image))
+    def launch_load_project_event(self, path_to_image: pathlib.Path) -> None:
+        self.post_fifo(Event(signal=signals.LOAD_PROJECT, payload=path_to_image))
 
-    def launch_save_image_event(self, path_to_image: pathlib.Path) -> None:
-        self.post_fifo(Event(signal=signals.SAVE_IMAGE, payload=path_to_image))
+    def launch_save_project_event(self, path_to_image: pathlib.Path) -> None:
+        self.post_fifo(Event(signal=signals.SAVE_PROJECT, payload=path_to_image))
 
     def launch_add_bubble_event(self, bubble: AddBubblePayload):
         self.post_fifo(Event(signal=signals.ADD_BUBBLE, payload=bubble))
@@ -83,8 +98,8 @@ def init_state(s: Statechart, e: Event) -> return_status:
     elif e.signal == signals.NEW_IMAGE:
         s.on_init_state_new_image(e.payload)
         status = s.trans(image_loaded)
-    elif e.signal == signals.LOAD_IMAGE:
-        s.on_init_state_load_image(e.payload)
+    elif e.signal == signals.LOAD_PROJECT:
+        s.on_init_state_load_project(e.payload)
         status = s.trans(image_loaded)
     else:
         s.temp.fun = s.top
@@ -106,8 +121,8 @@ def image_loaded(s: Statechart, e: Event) -> return_status:
     elif e.signal == signals.ADD_BUBBLE:
         s.on_image_loaded_add_bubble(e.payload)
         status = return_status.HANDLED
-    elif e.signal == signals.SAVE_IMAGE:
-        s.on_image_loaded_save_image(e.payload)
+    elif e.signal == signals.SAVE_PROJECT:
+        s.on_image_loaded_save_project(e.payload)
         status = return_status.HANDLED
     elif e.signal == signals.UNDO:
         s.on_image_loaded_undo()

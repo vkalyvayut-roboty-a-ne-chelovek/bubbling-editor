@@ -9,7 +9,8 @@ from miros import Event
 from miros import signals
 
 from bubbling_editor.bus import Bus
-from bubbling_editor.statechart import *
+from bubbling_editor.misc import AddBubblePayload, Kind
+from bubbling_editor.statechart import Statechart
 from bubbling_editor.gui import TestabeGui
 
 
@@ -102,7 +103,7 @@ class TestStatechart(unittest.TestCase):
     def test_add_bubble(self):
         self.s.launch_new_image_event('./assets/smiley.png')
         self.s.launch_add_bubble_event(AddBubblePayload(pos=[0, 0], radius=0))
-        self.s.launch_add_bubble_event(AddBubblePayload(pos=[0, 0], radius=0))
+        self.s.launch_add_bubble_event(AddBubblePayload(pos=[0, 0], radius=0, kind=Kind.COUNTER))
         time.sleep(0.1)
 
         expected_spy = ['START', 'SEARCH_FOR_SUPER_SIGNAL:init_state', 'ENTRY_SIGNAL:init_state', 'INIT_SIGNAL:init_state', '<- Queued:(0) Deferred:(0)', 'NEW_IMAGE:init_state', 'SEARCH_FOR_SUPER_SIGNAL:image_loaded', 'ENTRY_SIGNAL:image_loaded', 'INIT_SIGNAL:image_loaded', '<- Queued:(2) Deferred:(0)', 'ADD_BUBBLE:image_loaded', 'ADD_BUBBLE:image_loaded:HOOK', '<- Queued:(1) Deferred:(0)', 'ADD_BUBBLE:image_loaded', 'ADD_BUBBLE:image_loaded:HOOK', '<- Queued:(0) Deferred:(0)']

@@ -36,7 +36,7 @@ class Statechart(ActiveObject):
         with open(path_to_project, mode='r', encoding='utf-8') as project_handle:
             data = json.load(project_handle)
             path_to_image = data['path_to_image']
-            bubbles = [AddBubblePayload(pos=bubble[0], radius=bubble[1]) for bubble in data['bubbles']]
+            bubbles = [AddBubblePayload(pos=bubble[0], radius=bubble[1], kind=bubble[2]) for bubble in data['bubbles']]
 
             self.path_to_image = path_to_image
             self.bubbles = bubbles

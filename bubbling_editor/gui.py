@@ -7,7 +7,7 @@ from tkinter import filedialog
 from bubbling_editor.bus import Bus
 from bubbling_editor import helpers
 
-from bubbling_editor.misc import AddBubblePayload
+from bubbling_editor.misc import AddBubblePayload, Kind
 from bubbling_editor.bubbling_editor_image import BubblingEditorImage
 
 
@@ -174,10 +174,12 @@ class Gui(TestabeGui):
 
     def enable_click_listener(self):
         self.canvas.bind('<Button-1>', lambda e: self._on_canvas_click(e.x, e.y))
+        self.canvas.bind('<Button-3>', lambda e: self._on_canvas_click(e.x, e.y, counter=True))
         self.canvas.bind('<Motion>', lambda e: self._draw_temp_bubble(e.x, e.y))
 
     def disable_click_listener(self):
         self.canvas.unbind('<Button-1>')
+        self.canvas.unbind('<Button-3>')
         self.canvas.unbind('<Motion>')
 
     def enable_bubble_radius_slider(self):
@@ -206,9 +208,13 @@ class Gui(TestabeGui):
         radius = int(self.bubble_radius_var.get())
         self.canvas.create_oval(x - radius, y - radius, x + radius, y + radius, fill='red', tags=('#temp_bubble',))
 
-    def _on_canvas_click(self, x, y) -> None:
+    def _on_canvas_click(self, x, y, counter=False) -> None:
         rel_x, rel_y, rel_radius = self.image.get_bubbles_coords_on_image(x, y, int(self.bubble_radius_var.get()))
-        self.bus.statechart.launch_add_bubble_event(AddBubblePayload(pos=[rel_x, rel_y], radius=rel_radius))
+        kind = Kind.COUNTER if counter else Kind.REGULAR
+
+        bubble = AddBubblePayload(pos=[rel_x, rel_y], radius=rel_radius, kind=kind)
+
+        self.bus.statechart.launch_add_bubble_event(bubble)
 
     def load_image(self, path_to_image: pathlib.Path, bubbles: list) -> None:
         self.image = BubblingEditorImage(canvas=self.canvas, path_to_image=path_to_image, bubbles=bubbles)

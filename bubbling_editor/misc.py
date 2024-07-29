@@ -1,3 +1,10 @@
 from collections import namedtuple
+from enum import Enum
 
-AddBubblePayload = namedtuple('AddBubblePayload', ['pos', 'radius'])
+
+class Kind(int, Enum):
+    REGULAR = 1
+    COUNTER = 2
+
+
+AddBubblePayload = namedtuple('AddBubblePayload', ['pos', 'radius', 'kind'], defaults=[Kind.REGULAR])

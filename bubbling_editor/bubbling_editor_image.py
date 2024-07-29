@@ -2,7 +2,7 @@ import pathlib
 from PIL import Image, ImageTk, ImageDraw, ImageOps
 
 import bubbling_editor.helpers as helpers
-from bubbling_editor.misc import AddBubblePayload
+from bubbling_editor.misc import AddBubblePayload, Kind
 
 
 class BubblingEditorImage:
@@ -67,7 +67,10 @@ class BubblingEditorImage:
             x, y = bubble.pos[0] * self.resized_image.width, bubble.pos[1] * self.resized_image.height
             rel_radius = bubble.radius
             abs_radius = rel_radius * self.image_scale
-            mask_draw.ellipse((x - abs_radius, y - abs_radius, x + abs_radius, y + abs_radius), fill=255)
+            fill = 255
+            if bubble.kind == Kind.COUNTER:
+                fill = 0
+            mask_draw.ellipse((x - abs_radius, y - abs_radius, x + abs_radius, y + abs_radius), fill=fill)
 
         mask = ImageOps.invert(mask)
 

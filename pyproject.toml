@@ -1,7 +1,7 @@
 [project]
 name="bubbling-editor"
 description='Simple Tkinter image bubbling editor'
-version="0.1"
+version="0.0.1"
 authors=[
     { name="vkalyvayut-roboty-a-ne-chelovek"}
 ]

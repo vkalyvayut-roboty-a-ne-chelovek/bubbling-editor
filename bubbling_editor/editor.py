@@ -9,17 +9,17 @@ from bubbling_editor.gui import Gui
 
 
 def run():
-    bus = Bus()
-    gui = Gui(bus)
-    statechart = Statechart('bubbling_editor', bus=bus)
-
-    statechart.run()
-    gui.run()
-
-
-if __name__ == '__main__':
     args = get_args()
     if args.path_to_project:
         export_project(path_to_project=args.path_to_project, path_to_exported_image=args.path_to_image)
     else:
-        run()
+        bus = Bus()
+        gui = Gui(bus)
+        statechart = Statechart('bubbling_editor', bus=bus)
+
+        statechart.run()
+        gui.run()
+
+
+if __name__ == '__main__':
+    run()

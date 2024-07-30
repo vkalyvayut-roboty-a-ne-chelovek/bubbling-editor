@@ -286,7 +286,9 @@ class Gui(TestabeGui):
         1. import image or open project
         2. add bubbles
         3. save project
-        4. export image        
+        4. export image
+        
+        Export project from command-line: bubbling-editor -p <path-to-project> -i <path-to-image>
         '''
         toplevel = tkinter.Toplevel(self.root)
         toplevel.title('Help')

@@ -19,3 +19,8 @@ Typical workflow:
 4. export image
 ```
 Export project from command-line: `bubbling-editor -p <path-to-project> -i <path-to-image>`
+
+Screenshot
+![editor screenshot](assets/editor.png)
+Result
+![result image](assets/image.png)

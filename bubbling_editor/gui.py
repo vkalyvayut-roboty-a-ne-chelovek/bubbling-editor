@@ -75,15 +75,15 @@ class Gui(TestabeGui):
         self.root.rowconfigure(0, weight=1)
         self.root.rowconfigure(1, weight=95)
 
-        self.instruments_panel = tkinter.Frame(self.root, background='red')
+        self.instruments_panel = tkinter.Frame(self.root)
         self.instruments_panel.grid(row=0, column=0, sticky='ew')
 
-        self.canvas_panel = tkinter.Frame(self.root, background='green')
+        self.canvas_panel = tkinter.Frame(self.root)
         self.canvas_panel.grid(row=1, column=0, sticky='nesw')
         self.canvas_panel.columnconfigure(0, weight=1)
         self.canvas_panel.rowconfigure(0, weight=1)
 
-        self.canvas = tkinter.Canvas(self.canvas_panel, background='blue')
+        self.canvas = tkinter.Canvas(self.canvas_panel)
         self.canvas.grid(row=0, column=0, sticky='nesw')
 
         self.new_image_btn = tkinter.Button(

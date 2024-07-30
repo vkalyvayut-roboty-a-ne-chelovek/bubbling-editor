@@ -134,12 +134,18 @@ class Gui(TestabeGui):
         self.forced_scale_var = tkinter.DoubleVar(value=0)
         self.forced_scale_frame = tkinter.Frame(self.instruments_panel)
         self.forced_scale_frame.grid(row=0, column=6, sticky='nesw')
+        self.forced_scale_label = tkinter.Label(self.forced_scale_frame, text='Forced scale: ')
+        self.forced_scale_label.grid(column=0, row=0, sticky='w')
         self.forced_scale_input = tkinter.Entry(self.forced_scale_frame, textvariable=self.forced_scale_var)
-        self.forced_scale_input.grid(column=0, row=0, sticky='w')
-        self.forced_scale_apply_btn = tkinter.Button(self.forced_scale_frame, text='SCALE', command=self.update_image_with_forced_scale)
-        self.forced_scale_apply_btn.grid(column=1, row=0, sticky='w')
-        self.forced_scale_apply_btn = tkinter.Button(self.forced_scale_frame, text='RESET', command=self.reset_forced_scale)
+        self.forced_scale_input.grid(column=1, row=0, sticky='w')
+        self.forced_scale_apply_btn = tkinter.Button(self.forced_scale_frame, text='APPLY', command=self.update_image_with_forced_scale)
         self.forced_scale_apply_btn.grid(column=2, row=0, sticky='w')
+        self.forced_scale_apply_btn = tkinter.Button(self.forced_scale_frame, text='RESET', command=self.reset_forced_scale)
+        self.forced_scale_apply_btn.grid(column=3, row=0, sticky='w')
+
+        self.forced_scale_frame = tkinter.Button(self.instruments_panel, text='?', command=self._show_help_popup)
+        self.forced_scale_frame.grid(row=0, column=7, sticky='n')
+        self.root.bind('<F1>', lambda _: self._show_help_popup())
 
         self.root.bind('<Configure>', lambda _: self.redraw_image())
 
@@ -264,4 +270,36 @@ class Gui(TestabeGui):
         path_to_image = filedialog.asksaveasfilename(filetypes=[('Image', '.png')])
         if path_to_image:
             self.bus.statechart.launch_export_image_event(path_to_image)
+
+    def _show_help_popup(self):
+        help_text = '''
+        <Control-o> - open project
+        <Control-s> - save project
+        <Control-n> - import image
+        <Left-click> - draw bubble
+        <Right-click> - draw counter bubble
+        <Mouse-wheel> - change bubble size
+        <Control-z> - remove last-bubble
+        <Control-e> - export project
+        
+        Typical workflow:
+        1. import image or open project
+        2. add bubbles
+        3. save project
+        4. export image        
+        '''
+        toplevel = tkinter.Toplevel(self.root)
+        toplevel.title('Help')
+        toplevel.bind('<Escape>', lambda _: toplevel.destroy())
+
+        toplevel.columnconfigure(0, weight=1)
+        toplevel.rowconfigure(0, weight=1)
+
+        help_label = tkinter.Label(toplevel, text=help_text, justify='left')
+        help_label.grid(row=0, column=0, sticky='nesw')
+
+        toplevel.grab_set()
+        self.root.wait_window(toplevel)
+
+
 

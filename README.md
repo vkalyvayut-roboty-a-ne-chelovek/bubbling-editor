@@ -22,8 +22,8 @@ Export project from command-line: `bubbling-editor -p <path-to-project> -i <path
 
 Screenshot
 
-![editor screenshot](assets/editor.png)
+![editor screenshot](bubbling_editor/assets/editor.png)
 
 Result
 
-![result image](assets/image.png)
+![result image](bubbling_editor/assets/image.png)

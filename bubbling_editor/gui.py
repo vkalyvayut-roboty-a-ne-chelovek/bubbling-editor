@@ -91,6 +91,7 @@ class Gui(TestabeGui):
             command=self._show_new_image_popup)
         self.new_image_btn.grid(row=0, column=0, sticky='w')
         self.root.bind('<Control-n>', lambda _: self._show_new_image_popup())
+        self.root.bind('<Control-n>', lambda _: self.bus.statechart.launch_new_image_event('/home/user28/projects/python/bubbling-editor/tests/assets/smiley@5.png'))
 
 
         self.open_project_btn = tkinter.Button(

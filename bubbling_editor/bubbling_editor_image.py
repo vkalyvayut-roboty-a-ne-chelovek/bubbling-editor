@@ -1,5 +1,5 @@
 import pathlib
-from PIL import Image, ImageTk, ImageDraw, ImageOps
+from PIL import Image, ImageTk
 
 import bubbling_editor.helpers as helpers
 from bubbling_editor.misc import AddBubblePayload, Kind
@@ -27,8 +27,8 @@ class BubblingEditorImage:
         if self.path_to_image:
             self._clear_image()
             self._load_raw_image()
-            self._resize_raw_image()
-            self._apply_bubbles()
+            self._apply_bubbles_to_raw_image()
+            self._resize_raw_image_to_draw_on_canvas()
             self._draw_image_on_canvas()
 
     def set_forced_scale(self, forced_scale: float = None) -> None:
@@ -42,41 +42,12 @@ class BubblingEditorImage:
 
     def _load_raw_image(self):
         self.original_image = Image.open(self.path_to_image).convert(mode='RGBA')
+        self.resized_image = self.original_image.copy()
 
-    def _apply_bubbles(self, no_alpha: bool = False):
-        """
-        накладываю одно изображение на другое с использованием маски
-        перед этим делаю накладываемое изображение полупрозрачным,
-        а маску, с нарисованными на ней кругами, инвертирую
-        """
+    def _apply_bubbles_to_raw_image(self):
+        self.resized_image = helpers.apply_bubbles(self.resized_image, bubbles=self.bubbles)
 
-        image1: Image = self.resized_image.copy()  # подложка
-        image2: Image = None  # изображение, накладываемое поверх
-
-        if no_alpha:
-            image2: Image = Image.new(mode='RGBA', size=(image1.width, image1.height), color=(255, 0, 0))
-            image2.putalpha(255)
-        else:
-            image2: Image = self.resized_image.copy()
-            image2.putalpha(127)
-
-        mask = Image.new(mode='L', size=(self.resized_image.width, self.resized_image.height), color=0)
-        mask_draw = ImageDraw.Draw(mask)
-
-        for bubble in self.bubbles:
-            x, y = bubble.pos[0] * self.resized_image.width, bubble.pos[1] * self.resized_image.height
-            rel_radius = bubble.radius
-            abs_radius = rel_radius * self.image_scale
-            fill = 255
-            if bubble.kind == Kind.COUNTER:
-                fill = 0
-            mask_draw.ellipse((x - abs_radius, y - abs_radius, x + abs_radius, y + abs_radius), fill=fill)
-
-        mask = ImageOps.invert(mask)
-
-        self.resized_image_to_draw = Image.composite(image2, image1, mask)
-
-    def _resize_raw_image(self):
+    def _resize_raw_image_to_draw_on_canvas(self):
         c_w, c_h = self.canvas.winfo_width(), self.canvas.winfo_height()
         i_w, i_h = self.original_image.width, self.original_image.height
 
@@ -91,7 +62,7 @@ class BubblingEditorImage:
             scale = self.image_forced_scale
 
         self.image_scale = scale
-        self.resized_image = self.original_image.resize((x, y), resample=Image.Resampling.NEAREST)
+        self.resized_image_to_draw = self.resized_image.resize((x, y), resample=Image.Resampling.NEAREST)
 
     def _draw_image_on_canvas(self):
         self.tk_image = ImageTk.PhotoImage(image=self.resized_image_to_draw)
@@ -103,7 +74,7 @@ class BubblingEditorImage:
         )
 
     def get_bubbles_coords_on_image(self, c_x, c_y, radius) -> list[float, float, float]:
-        i_w, i_h = self.resized_image.width, self.resized_image.height
+        i_w, i_h = self.resized_image_to_draw.width, self.resized_image_to_draw.height
         c_w, c_h = self.canvas.winfo_width(), self.canvas.winfo_height()
         x, y = helpers.from_canvas_to_image_coords(i_w=i_w, i_h=i_h, c_w=c_w, c_h=c_h, x=c_x, y=c_y)
         new_data = [x, y, int(radius * 1 / self.image_scale)]
@@ -111,7 +82,7 @@ class BubblingEditorImage:
         return new_data
 
     def get_clamped_coords_on_image(self, x: int, y: int) -> list[int, int]:
-        i_w, i_h = self.resized_image.width, self.resized_image.height
+        i_w, i_h = self.resized_image_to_draw.width, self.resized_image_to_draw.height
         c_w, c_h = self.canvas.winfo_width(), self.canvas.winfo_height()
         x, y = helpers.clamp_coords_in_image_area(i_w=i_w, i_h=i_h, c_w=c_w, c_h=c_h, x=x, y=y)
 
@@ -124,9 +95,3 @@ class BubblingEditorImage:
     def update_bubbles(self, bubbles: list[AddBubblePayload]) -> None:
         self.bubbles = bubbles
         self.redraw_image()
-
-    def export(self, path_to_image: pathlib.Path) -> None:
-        self._apply_bubbles(no_alpha=True)
-
-        image_to_export = self.resized_image_to_draw.copy().resize((self.original_image.width, self.original_image.height))
-        image_to_export.save(path_to_image)

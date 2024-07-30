@@ -8,7 +8,7 @@ from miros import Event
 from miros import spy_on
 
 from bubbling_editor.bus import Bus
-
+import bubbling_editor.helpers as helpers
 from bubbling_editor.misc import AddBubblePayload
 
 
@@ -33,27 +33,18 @@ class Statechart(ActiveObject):
         self.bus.gui.load_image(path_to_image, bubbles=[])
 
     def on_init_state_load_project(self, path_to_project: pathlib.Path):
-        with open(path_to_project, mode='r', encoding='utf-8') as project_handle:
-            data = json.load(project_handle)
-            path_to_image = data['path_to_image']
-            bubbles = [AddBubblePayload(pos=bubble[0], radius=bubble[1], kind=bubble[2]) for bubble in data['bubbles']]
+        project = helpers.read_project(path_to_project)
 
-            self.path_to_image = path_to_image
-            self.bubbles = bubbles
+        self.path_to_image = project['path_to_image']
+        self.bubbles = project['bubbles']
 
-            self.bus.gui.load_image(data['path_to_image'], bubbles=bubbles)
+        self.bus.gui.load_image(self.path_to_image, bubbles=self.bubbles)
 
     def on_image_loaded_save_project(self, path_to_project: pathlib.Path):
-        data = {
-            'version': 0,
-            'path_to_image': str(pathlib.Path(self.path_to_image).absolute()),
-            'bubbles': self.bubbles
-        }
-        with open(path_to_project, mode='w', encoding='utf-8') as project_handle:
-            project_handle.write(json.dumps(data))
+        helpers.save_project(path_to_image=self.path_to_image, bubbles=self.bubbles, path_to_project=path_to_project)
 
-    def on_image_loaded_export_image(self, path_to_image: pathlib.Path):
-        self.bus.gui.image.export(path_to_image)
+    def on_image_loaded_export_image(self, path_to_exported_image: pathlib.Path):
+        helpers.export_image(self.path_to_image, bubbles=self.bubbles, path_to_exported_image=path_to_exported_image)
 
     def on_image_loaded_entry(self):
         self.bus.gui.enable_save_btn()
@@ -85,8 +76,8 @@ class Statechart(ActiveObject):
     def launch_save_project_event(self, path_to_project: pathlib.Path) -> None:
         self.post_fifo(Event(signal=signals.SAVE_PROJECT, payload=path_to_project))
 
-    def launch_export_image_event(self, path_to_image: pathlib.Path) -> None:
-        self.post_fifo(Event(signal=signals.EXPORT_IMAGE, payload=path_to_image))
+    def launch_export_image_event(self, path_to_exported_image: pathlib.Path) -> None:
+        self.post_fifo(Event(signal=signals.EXPORT_IMAGE, payload=path_to_exported_image))
 
     def launch_add_bubble_event(self, bubble: AddBubblePayload):
         self.post_fifo(Event(signal=signals.ADD_BUBBLE, payload=bubble))

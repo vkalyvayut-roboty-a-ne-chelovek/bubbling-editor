@@ -126,6 +126,23 @@ class TestStatechart(unittest.TestCase):
 
         self._assert_spy_check(expected_spy, actual_spy)
 
+    def test_export(self):
+        self.s.launch_new_image_event('./assets/smiley.png')
+        self.s.launch_add_bubble_event(AddBubblePayload(pos=[0, 0], radius=0))
+        self.s.launch_add_bubble_event(AddBubblePayload(pos=[0, 0], radius=0, kind=Kind.COUNTER))
+        time.sleep(0.1)
+        tmp_file = pathlib.Path(tempfile.mktemp(suffix='.png')).absolute()
+        self.s.launch_export_image_event(tmp_file)
+        time.sleep(0.1)
+
+        assert os.path.exists(tmp_file)
+
+        expected_spy = ['START', 'SEARCH_FOR_SUPER_SIGNAL:init_state', 'ENTRY_SIGNAL:init_state', 'INIT_SIGNAL:init_state', '<- Queued:(0) Deferred:(0)', 'NEW_IMAGE:init_state', 'SEARCH_FOR_SUPER_SIGNAL:image_loaded', 'ENTRY_SIGNAL:image_loaded', 'INIT_SIGNAL:image_loaded', '<- Queued:(2) Deferred:(0)', 'ADD_BUBBLE:image_loaded', 'ADD_BUBBLE:image_loaded:HOOK', '<- Queued:(1) Deferred:(0)', 'ADD_BUBBLE:image_loaded', 'ADD_BUBBLE:image_loaded:HOOK', '<- Queued:(0) Deferred:(0)', 'EXPORT_IMAGE:image_loaded', 'EXPORT_IMAGE:image_loaded:HOOK', '<- Queued:(0) Deferred:(0)']
+
+        actual_spy = self.s.spy()
+
+        self._assert_spy_check(expected_spy, actual_spy)
+
 
 if __name__ == '__main__':
     unittest.main()

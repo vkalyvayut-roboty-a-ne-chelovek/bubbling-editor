@@ -1,3 +1,4 @@
+import argparse
 import math
 import pathlib
 import json
@@ -135,3 +136,15 @@ def export_image(path_to_image: Image, bubbles: list[AddBubblePayload], path_to_
     image = Image.open(path_to_image)
     image = apply_bubbles(image, bubbles=bubbles, no_alpha=True)
     image.save(path_to_exported_image)
+
+
+def export_project(path_to_project: pathlib.Path, path_to_exported_image: pathlib.Path) -> None:
+    project = read_project(path_to_project)
+    export_image(project['path_to_image'], bubbles=project['bubbles'], path_to_exported_image=path_to_exported_image)
+
+
+def get_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser()
+    p.add_argument('-p', '--path-to-project', type=pathlib.Path, help='path to project')
+    p.add_argument('-i', '--path-to-image', type=pathlib.Path, help='path to exported image')
+    return p.parse_args()

@@ -7,4 +7,6 @@ class Kind(int, Enum):
     COUNTER = 2
 
 
-AddBubblePayload = namedtuple('AddBubblePayload', ['pos', 'radius', 'kind'], defaults=[Kind.REGULAR])
+AddBubblePayload = namedtuple('AddBubblePayload',
+                              ['pos', 'radius', 'kind'],
+                              defaults=[Kind.REGULAR])

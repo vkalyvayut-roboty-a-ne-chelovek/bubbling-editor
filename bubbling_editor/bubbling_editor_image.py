@@ -1,16 +1,20 @@
 import pathlib
 from PIL import Image, ImageTk
 
-import bubbling_editor.helpers as helpers
-from bubbling_editor.misc import AddBubblePayload, Kind
+from bubbling_editor import helpers
+from bubbling_editor.misc import AddBubblePayload
 
 
 class BubblingEditorImage:
-    def __init__(self, canvas, path_to_image: pathlib.Path, bubbles: list[AddBubblePayload]):
+    def __init__(self, canvas,
+                 path_to_image: pathlib.Path,
+                 bubbles: list[AddBubblePayload],
+                 color: str):
         self.canvas = canvas
 
         self.path_to_image: pathlib.Path = path_to_image
         self.bubbles = bubbles
+        self.color = color
 
         self.original_image: Image = None
         self.resized_image: Image = None
@@ -45,7 +49,10 @@ class BubblingEditorImage:
         self.resized_image = self.original_image.copy()
 
     def _apply_bubbles_to_raw_image(self):
-        self.resized_image = helpers.apply_bubbles(self.resized_image, bubbles=self.bubbles)
+        self.resized_image = helpers.apply_bubbles(
+            self.resized_image,
+            bubbles=self.bubbles,
+            color=self.color)
 
     def _resize_raw_image_to_draw_on_canvas(self):
         c_w, c_h = self.canvas.winfo_width(), self.canvas.winfo_height()
@@ -62,7 +69,8 @@ class BubblingEditorImage:
             scale = self.image_forced_scale
 
         self.image_scale = scale
-        self.resized_image_to_draw = self.resized_image.resize((x, y), resample=Image.Resampling.NEAREST)
+        self.resized_image_to_draw = self.resized_image.resize((x, y),
+                                                               resample=Image.Resampling.NEAREST)
 
     def _draw_image_on_canvas(self):
         self.tk_image = ImageTk.PhotoImage(image=self.resized_image_to_draw)

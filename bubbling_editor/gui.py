@@ -1,12 +1,10 @@
 import os.path
 import pathlib
-import time
 import tkinter
-from tkinter import filedialog
+from tkinter import filedialog, colorchooser
 
 
 from bubbling_editor.bus import Bus
-from bubbling_editor import helpers
 
 from bubbling_editor.misc import AddBubblePayload, Kind
 from bubbling_editor.bubbling_editor_image import BubblingEditorImage
@@ -44,7 +42,25 @@ class TestabeGui:
     def disable_bubble_radius_slider(self):
         pass
 
-    def load_image(self, path_to_image: pathlib.Path, bubbles: list) -> None:
+    def enable_undo_btn(self):
+        pass
+
+    def disable_undo_btn(self):
+        pass
+
+    def enable_forced_scale(self):
+        pass
+
+    def disable_forced_scale(self):
+        pass
+
+    def enable_color_picker_btn(self):
+        pass
+
+    def disable_color_picker_btn(self):
+        pass
+
+    def load_image(self, path_to_image: pathlib.Path, bubbles: list, color: str) -> None:
         pass
 
     def redraw_image(self) -> None:
@@ -60,6 +76,7 @@ class TestabeGui:
 class Gui(TestabeGui):
     def __init__(self, bus: Bus):
         super().__init__(bus=bus)
+        self.color = None
         self.path_to_image = None
         self.root: tkinter.Tk = None
 
@@ -103,7 +120,9 @@ class Gui(TestabeGui):
 
         self.save_project_btn = tkinter.Button(
             self.instruments_panel, text='SAVE',
-            command=self._show_save_project_popup)
+            command=self._show_save_project_popup,
+            state='disabled'
+        )
         self.save_project_btn.grid(row=0, column=2, sticky='w')
 
         self.export_image_btn = tkinter.Button(
@@ -113,10 +132,17 @@ class Gui(TestabeGui):
 
         self.bubble_radius_frame = tkinter.Frame(self.instruments_panel)
         self.bubble_radius_var = tkinter.IntVar(value=0)
-        self.bubble_radius_label = tkinter.Label(self.bubble_radius_frame, textvariable=self.bubble_radius_var, width=5)
+        self.bubble_radius_label = tkinter.Label(self.bubble_radius_frame,
+                                                 textvariable=self.bubble_radius_var,
+                                                 width=5)
         self.bubble_radius_slider = tkinter.Scale(self.bubble_radius_frame,
-                                                  from_=5, to=250, length=150, resolution=5, showvalue=False,
-                                                  orient='horizontal', variable=self.bubble_radius_var,
+                                                  from_=5,
+                                                  to=250,
+                                                  length=150,
+                                                  resolution=5,
+                                                  showvalue=False,
+                                                  orient='horizontal',
+                                                  variable=self.bubble_radius_var,
                                                   state='disabled')
 
         self.bubble_radius_frame.grid(row=0, column=4, sticky='nesw')
@@ -129,7 +155,9 @@ class Gui(TestabeGui):
 
         self.undo_btn = tkinter.Button(
             self.instruments_panel, text='UNDO',
-            command=self.bus.statechart.launch_undo_event)
+            command=self.bus.statechart.launch_undo_event,
+            state='disabled'
+        )
         self.undo_btn.grid(row=0, column=5, sticky='w')
         self.root.bind('<Control-z>', lambda _: self.bus.statechart.launch_undo_event())
 
@@ -138,15 +166,40 @@ class Gui(TestabeGui):
         self.forced_scale_frame.grid(row=0, column=6, sticky='nesw')
         self.forced_scale_label = tkinter.Label(self.forced_scale_frame, text='Forced scale: ')
         self.forced_scale_label.grid(column=0, row=0, sticky='w')
-        self.forced_scale_input = tkinter.Entry(self.forced_scale_frame, textvariable=self.forced_scale_var)
+        self.forced_scale_input = tkinter.Entry(self.forced_scale_frame,
+                                                textvariable=self.forced_scale_var)
         self.forced_scale_input.grid(column=1, row=0, sticky='w')
-        self.forced_scale_apply_btn = tkinter.Button(self.forced_scale_frame, text='APPLY', command=self.update_image_with_forced_scale)
+        self.forced_scale_apply_btn = tkinter.Button(self.forced_scale_frame,
+                                                     text='APPLY',
+                                                     command=self._update_image_with_forced_scale,
+                                                     state='disabled')
         self.forced_scale_apply_btn.grid(column=2, row=0, sticky='w')
-        self.forced_scale_apply_btn = tkinter.Button(self.forced_scale_frame, text='RESET', command=self.reset_forced_scale)
-        self.forced_scale_apply_btn.grid(column=3, row=0, sticky='w')
+        self.forced_scale_reset_btn = tkinter.Button(self.forced_scale_frame,
+                                                     text='RESET',
+                                                     command=self._reset_forced_scale,
+                                                     state='disabled')
+        self.forced_scale_reset_btn.grid(column=3, row=0, sticky='w')
 
-        self.forced_scale_frame = tkinter.Button(self.instruments_panel, text='?', command=self._show_help_popup)
-        self.forced_scale_frame.grid(row=0, column=7, sticky='n')
+        self.color_picker_frame = tkinter.Frame(self.instruments_panel)
+        self.color_picker_frame.grid(row=0, column=7, sticky='nesw')
+        self.color_picker_frame.columnconfigure(0, weight=1)
+        self.color_picker_frame.columnconfigure(1, weight=1)
+        self.color_picker_frame.rowconfigure(0, weight=1)
+
+        self.color_picker_color_indicator = tkinter.Label(self.color_picker_frame,
+                                                          width=5,
+                                                          background='red')
+        self.color_picker_color_indicator.grid(row=0, column=0, sticky='nesw')
+        self.color_picker_btn = tkinter.Button(self.color_picker_frame,
+                                               text='COLOR',
+                                               command=self._show_color_picker_popup,
+                                               state='disabled')
+        self.color_picker_btn.grid(row=0, column=1, sticky='w')
+
+        self.forced_scale_frame = tkinter.Button(self.instruments_panel,
+                                                 text='?',
+                                                 command=self._show_help_popup)
+        self.forced_scale_frame.grid(row=0, column=8, sticky='n')
         self.root.bind('<F1>', lambda _: self._show_help_popup())
 
         self.root.bind('<Configure>', lambda _: self.redraw_image())
@@ -157,16 +210,18 @@ class Gui(TestabeGui):
         self.root.mainloop()
 
     def enable_save_btn(self):
-        if hasattr(self, 'root') and self.root:
+        try:
             self.root.bind('<Control-s>', lambda _: self._show_save_project_popup())
-        if hasattr(self, 'save_image_btn'):
             self.save_project_btn['state'] = 'normal'
+        except:
+            pass
 
     def disable_save_btn(self):
-        if hasattr(self, 'root') and self.root:
+        try:
             self.root.unbind('<Control-s>')
-        if hasattr(self, 'save_image_btn'):
             self.save_project_btn['state'] = 'disabled'
+        except:
+            pass
 
     def enable_export_btn(self):
         if hasattr(self, 'root') and self.root:
@@ -200,6 +255,26 @@ class Gui(TestabeGui):
         self.root.unbind('<Button-4>')
         self.root.unbind('<Button-5>')
 
+    def enable_undo_btn(self):
+        self.undo_btn['state'] = 'normal'
+
+    def disable_undo_btn(self):
+        self.undo_btn['state'] = 'disabled'
+
+    def enable_forced_scale(self):
+        self.forced_scale_apply_btn['state'] = 'normal'
+        self.forced_scale_reset_btn['state'] = 'normal'
+
+    def disable_forced_scale(self):
+        self.forced_scale_apply_btn['state'] = 'disabled'
+        self.forced_scale_reset_btn['state'] = 'disabled'
+
+    def enable_color_picker_btn(self):
+        self.color_picker_btn['state'] = 'normal'
+
+    def disable_color_picker_btn(self):
+        self.color_picker_btn['state'] = 'disabled'
+
     def _draw_temp_bubble(self, x: int = None, y: int = None) -> None:
         if not self.image:
             return
@@ -214,33 +289,44 @@ class Gui(TestabeGui):
             self.canvas.delete(bubble)
 
         radius = int(self.bubble_radius_var.get())
-        self.canvas.create_oval(x - radius, y - radius, x + radius, y + radius, fill='red', tags=('#temp_bubble',))
+        self.canvas.create_oval(x - radius,
+                                y - radius,
+                                x + radius,
+                                y + radius,
+                                fill=self.color, tags=('#temp_bubble',))
 
     def _on_canvas_click(self, x, y, counter=False) -> None:
-        rel_x, rel_y, rel_radius = self.image.get_bubbles_coords_on_image(x, y, int(self.bubble_radius_var.get()))
+        bubble_radius = int(self.bubble_radius_var.get())
+        rel_x, rel_y, rel_radius = self.image.get_bubbles_coords_on_image(x, y, bubble_radius)
         kind = Kind.COUNTER if counter else Kind.REGULAR
 
         bubble = AddBubblePayload(pos=[rel_x, rel_y], radius=rel_radius, kind=kind)
 
         self.bus.statechart.launch_add_bubble_event(bubble)
 
-    def load_image(self, path_to_image: pathlib.Path, bubbles: list) -> None:
+    def load_image(self, path_to_image: pathlib.Path, bubbles: list, color: str) -> None:
         self.path_to_image = path_to_image
-        self.image = BubblingEditorImage(canvas=self.canvas, path_to_image=path_to_image, bubbles=bubbles)
+        self.color = color
+        self.image = BubblingEditorImage(canvas=self.canvas,
+                                         path_to_image=path_to_image,
+                                         bubbles=bubbles,
+                                         color=color)
         self.redraw_image()
+        self.color_picker_color_indicator['background'] = color
 
     def redraw_image(self):
         if self.image:
             self.image.redraw_image()
 
-    def update_image_with_forced_scale(self):
+    def _update_image_with_forced_scale(self):
         if self.image:
-            forced_scale = None if float(self.forced_scale_var.get()) <= 0 else float(self.forced_scale_var.get())
+            forced_scale = float(self.forced_scale_var.get())
+            forced_scale = None if forced_scale <= 0 else forced_scale
             self.image.set_forced_scale(forced_scale)
 
-    def reset_forced_scale(self):
+    def _reset_forced_scale(self):
         self.forced_scale_var.set(0)
-        self.update_image_with_forced_scale()
+        self._update_image_with_forced_scale()
 
     def add_bubble(self, bubble: AddBubblePayload) -> None:
         self.image.add_bubble(bubble)
@@ -287,6 +373,11 @@ class Gui(TestabeGui):
         if path_to_image:
             self.bus.statechart.launch_export_image_event(path_to_image)
 
+    def _show_color_picker_popup(self):
+        _, color_hex = colorchooser.askcolor(initialcolor=self.color)
+        if color_hex:
+            self.bus.statechart.launch_set_color_event(color_hex)
+
     def _show_help_popup(self):
         help_text = '''
         <Control-o> - open project
@@ -318,6 +409,3 @@ class Gui(TestabeGui):
 
         toplevel.grab_set()
         self.root.wait_window(toplevel)
-
-
-

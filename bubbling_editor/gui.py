@@ -1,3 +1,4 @@
+import os.path
 import pathlib
 import time
 import tkinter
@@ -59,6 +60,7 @@ class TestabeGui:
 class Gui(TestabeGui):
     def __init__(self, bus: Bus):
         super().__init__(bus=bus)
+        self.path_to_image = None
         self.root: tkinter.Tk = None
 
         self.image: BubblingEditorImage = None
@@ -223,6 +225,7 @@ class Gui(TestabeGui):
         self.bus.statechart.launch_add_bubble_event(bubble)
 
     def load_image(self, path_to_image: pathlib.Path, bubbles: list) -> None:
+        self.path_to_image = path_to_image
         self.image = BubblingEditorImage(canvas=self.canvas, path_to_image=path_to_image, bubbles=bubbles)
         self.redraw_image()
 
@@ -262,12 +265,25 @@ class Gui(TestabeGui):
             self.bus.statechart.launch_load_project_event(path_to_image)
 
     def _show_save_project_popup(self):
-        path_to_image = filedialog.asksaveasfilename(filetypes=[('Bubbling Editor Metadata', '.bubbling')])
+        image_dir = os.path.dirname(self.path_to_image)
+        image_name, _ = os.path.splitext(os.path.basename(self.path_to_image))
+        path_to_image = filedialog.asksaveasfilename(
+            filetypes=[('Bubbling Editor Metadata', '.bubbling')],
+            initialdir=image_dir,
+            initialfile=f'{image_name}.bubbling'
+        )
         if path_to_image:
             self.bus.statechart.launch_save_project_event(path_to_image)
 
     def _show_export_image_popup(self):
-        path_to_image = filedialog.asksaveasfilename(filetypes=[('Image', '.png')])
+        image_dir = os.path.dirname(self.path_to_image)
+        image_name, _ = os.path.splitext(os.path.basename(self.path_to_image))
+
+        path_to_image = filedialog.asksaveasfilename(
+            filetypes=[('Image', '.png')],
+            initialdir=image_dir,
+            initialfile=f'{image_name}_bubbling.png'
+        )
         if path_to_image:
             self.bus.statechart.launch_export_image_event(path_to_image)
 

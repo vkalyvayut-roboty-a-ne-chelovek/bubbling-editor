@@ -1,7 +1,7 @@
 [project]
 name="bubbling-editor"
 description='Simple Tkinter image bubbling editor'
-version="0.0.3"
+version="0.0.3.1"
 authors=[
     { name="vkalyvayut-roboty-a-ne-chelovek"}
 ]
@@ -10,7 +10,7 @@ dependencies=[
     "pillow"
 ]
 requires-python=">= 3.10"
-readme="README.MD"
+readme="README.md"
 keywords=["tkinter", "bubbling", "image-editor"]
 license = { file = "LICENSE" }
 classifiers = [

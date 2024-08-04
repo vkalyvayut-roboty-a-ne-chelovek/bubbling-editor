@@ -431,6 +431,7 @@ class Gui(TestabeGui):
 <Left-click> - draw bubble
 <Right-click> - draw counter bubble
 <Mouse-wheel> or KP_Add/KP_Subtract - change bubble size
+<Control-k> - change background (no bubble) color
 <Control-z> - remove last-bubble
 <Control-e> - export project
 

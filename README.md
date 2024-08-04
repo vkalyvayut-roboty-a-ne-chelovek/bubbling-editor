@@ -6,7 +6,8 @@ Simple Tkinter image bubbling editor
 <Control-n> - import image
 <Left-click> - draw bubble
 <Right-click> - draw counter bubble
-<Mouse-wheel> - change bubble size
+<Mouse-wheel> or KP_Add/KP_Subtract - change bubble size
+<Control-k> - change background (no bubble) color
 <Control-z> - remove last-bubble
 <Control-e> - export project
 ```
@@ -20,10 +21,5 @@ Typical workflow:
 ```
 Export project from command-line: `bubbling-editor -p <path-to-project> -i <path-to-image>`
 
-Screenshot
 
 ![editor screenshot](bubbling_editor/assets/editor.png)
-
-Result
-
-![result image](bubbling_editor/assets/image.png)

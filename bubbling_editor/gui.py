@@ -89,6 +89,7 @@ class Gui(TestabeGui):
     def make_gui(self):
         self.root = tkinter.Tk()
         self.root.attributes('-zoomed', True)
+        self.root.title('bubbling editor 🖼')
 
         self.menu = tkinter.Menu(self.root, tearoff=False, borderwidth=0)
         self.project_menu = tkinter.Menu(tearoff=False)

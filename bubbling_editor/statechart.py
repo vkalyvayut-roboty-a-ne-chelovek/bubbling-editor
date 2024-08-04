@@ -30,6 +30,7 @@ class Statechart(ActiveObject):
 
     def on_init_state_new_image(self, path_to_image: pathlib.Path):
         self.path_to_image = path_to_image
+        self.bubbles = []
         self.bus.gui.load_image(path_to_image, bubbles=[], color=self.color)
 
     def on_init_state_load_project(self, path_to_project: pathlib.Path):
